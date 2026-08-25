@@ -43,4 +43,4 @@ pytest
 ```
 
 Start with [the documentation index](docs/README.md) before making design or architecture
-decisions.
+decisions. The dependency-ordered implementation plan is in [ROADMAP.md](ROADMAP.md).
