@@ -1,0 +1,8 @@
+model_version,horizon,modeled_active_players,cumulative_minted_coins,cumulative_destroyed_coins,net_new_supply_coins,net_supply_bps_of_minted,average_wallet_coins,unfunded_sink_demand_coins
+phase0-v1,one_day,1000,245277.14,144624.29,100652.86,4103,100.65,0.00
+phase0-v1,one_week,1000,1716940.00,1162370.00,554570.00,3229,554.57,0.00
+phase0-v1,one_month,1000,7358314.29,5188728.57,2169585.71,2948,2169.59,0.00
+phase0-v1,three_months,1000,22320220.00,15960810.00,6359410.00,2849,6359.41,0.00
+phase0-v1,six_months,1000,44640440.00,35121620.00,9518820.00,2132,9518.82,0.00
+phase0-v1,one_year,1000,89526157.14,73087864.29,16438292.86,1836,16438.29,0.00
+phase0-v1,three_years,1000,268578471.43,205163592.86,63414878.57,2361,63414.88,0.00

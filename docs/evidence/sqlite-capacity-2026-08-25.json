@@ -1,0 +1,501 @@
+{
+  "evidence_format": "phase0-sqlite-evidence-v2",
+  "benchmark_schema": "phase0-disposable-v2",
+  "disposable_schema": true,
+  "generated_at_utc": "2026-08-25T22:43:19.322305+00:00",
+  "implementation_sha256": "ca60bdfef9db025510d01deb338284566cc17e27043330c5420377c58ff21f7f",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+    "logical_cpus": 12,
+    "python": "3.13.15",
+    "sqlite": "3.50.4",
+    "aiosqlite": "0.22.1",
+    "storage": {
+      "temporary_directory": "C:\\Users\\linho\\AppData\\Local\\Temp",
+      "description": "Local C: temporary-directory storage on the development host; deployment host and physical media are not yet selected.",
+      "volume_total_bytes": 1023094550528,
+      "volume_free_bytes_at_start": 768028536832
+    }
+  },
+  "configuration": {
+    "foreign_keys": "ON",
+    "journal_mode": "WAL",
+    "synchronous": "FULL",
+    "busy_timeout_ms": 1000,
+    "max_retries_after_initial": 2,
+    "retry_budget_ms": 3000,
+    "retry_backoff_ms": [
+      25,
+      75
+    ],
+    "retry_deadline_guard_ms": 200,
+    "projected_peak_tps": 17.0,
+    "twice_projected_peak_tps": 34.0,
+    "offered_tps": 34.0,
+    "warmup_seconds": 10.0,
+    "measurement_seconds": 30.0,
+    "repeats": 3,
+    "workers": 4,
+    "seed_accounts": 64,
+    "initial_wallet_balance": 1000,
+    "workload_mix": "20% unique join, 40% credit, 40% sufficient-funds and revision-guarded debit",
+    "saturation_concurrency": [
+      1,
+      4,
+      8,
+      16
+    ],
+    "saturation_operations_per_level": 800
+  },
+  "observed_pragmas": {
+    "foreign_keys": 1,
+    "journal_mode": "wal",
+    "synchronous": 2,
+    "busy_timeout_ms": 1000
+  },
+  "open_loop_runs": [
+    {
+      "scheduled_operations": 1020,
+      "succeeded": 1020,
+      "applied_mutations": 1020,
+      "completed_tps_including_drain": 33.987,
+      "latency_ms": {
+        "median": 10.375,
+        "p95": 17.432,
+        "p99": 18.356,
+        "max": 21.275
+      },
+      "service_ms": {
+        "p95": 3.025,
+        "p99": 6.816
+      },
+      "queue_delay_ms": {
+        "p95": 14.79,
+        "p99": 15.636,
+        "max": 16.179
+      },
+      "lock_held_ms": {
+        "p95": 2.623,
+        "p99": 6.26
+      },
+      "retried_operations": 0,
+      "retry_rate_percent": 0.0,
+      "lock_events": 0,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": true,
+      "acceptance_failures": [],
+      "workload": {
+        "create": 204,
+        "credit": 408,
+        "guarded_debit": 408
+      },
+      "repeat": 1,
+      "workers": 4,
+      "warmup_seconds": 10.0,
+      "warmup_operations": 340,
+      "measurement_seconds": 30.0,
+      "target_offered_tps": 34.0,
+      "actual_offered_tps": 34.0,
+      "completed_within_window": 1020,
+      "completed_within_window_tps": 34.0,
+      "completion_within_window_percent": 100.0,
+      "backlog_at_window_end": 0,
+      "drain_seconds": 0.012,
+      "wal": {
+        "bytes_before_checkpoint": 4177712,
+        "checkpoint_busy": 0,
+        "log_frames": 1001,
+        "checkpointed_frames": 1001
+      }
+    },
+    {
+      "scheduled_operations": 1020,
+      "succeeded": 1020,
+      "applied_mutations": 1020,
+      "completed_tps_including_drain": 33.99,
+      "latency_ms": {
+        "median": 10.555,
+        "p95": 17.601,
+        "p99": 18.595,
+        "max": 21.711
+      },
+      "service_ms": {
+        "p95": 2.99,
+        "p99": 6.249
+      },
+      "queue_delay_ms": {
+        "p95": 15.007,
+        "p99": 15.7,
+        "max": 16.163
+      },
+      "lock_held_ms": {
+        "p95": 2.587,
+        "p99": 5.79
+      },
+      "retried_operations": 0,
+      "retry_rate_percent": 0.0,
+      "lock_events": 0,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": true,
+      "acceptance_failures": [],
+      "workload": {
+        "create": 204,
+        "credit": 408,
+        "guarded_debit": 408
+      },
+      "repeat": 2,
+      "workers": 4,
+      "warmup_seconds": 10.0,
+      "warmup_operations": 340,
+      "measurement_seconds": 30.0,
+      "target_offered_tps": 34.0,
+      "actual_offered_tps": 34.0,
+      "completed_within_window": 1020,
+      "completed_within_window_tps": 34.0,
+      "completion_within_window_percent": 100.0,
+      "backlog_at_window_end": 0,
+      "drain_seconds": 0.009,
+      "wal": {
+        "bytes_before_checkpoint": 4181832,
+        "checkpoint_busy": 0,
+        "log_frames": 95,
+        "checkpointed_frames": 95
+      }
+    },
+    {
+      "scheduled_operations": 1020,
+      "succeeded": 1020,
+      "applied_mutations": 1020,
+      "completed_tps_including_drain": 33.983,
+      "latency_ms": {
+        "median": 10.45,
+        "p95": 17.492,
+        "p99": 18.238,
+        "max": 24.183
+      },
+      "service_ms": {
+        "p95": 2.971,
+        "p99": 6.388
+      },
+      "queue_delay_ms": {
+        "p95": 14.919,
+        "p99": 15.551,
+        "max": 15.854
+      },
+      "lock_held_ms": {
+        "p95": 2.569,
+        "p99": 6.006
+      },
+      "retried_operations": 0,
+      "retry_rate_percent": 0.0,
+      "lock_events": 0,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": true,
+      "acceptance_failures": [],
+      "workload": {
+        "create": 204,
+        "credit": 408,
+        "guarded_debit": 408
+      },
+      "repeat": 3,
+      "workers": 4,
+      "warmup_seconds": 10.0,
+      "warmup_operations": 340,
+      "measurement_seconds": 30.0,
+      "target_offered_tps": 34.0,
+      "actual_offered_tps": 34.0,
+      "completed_within_window": 1020,
+      "completed_within_window_tps": 34.0,
+      "completion_within_window_percent": 100.0,
+      "backlog_at_window_end": 0,
+      "drain_seconds": 0.015,
+      "wal": {
+        "bytes_before_checkpoint": 4206552,
+        "checkpoint_busy": 0,
+        "log_frames": 949,
+        "checkpointed_frames": 949
+      }
+    }
+  ],
+  "saturation_diagnostic": [
+    {
+      "scheduled_operations": 800,
+      "succeeded": 800,
+      "applied_mutations": 800,
+      "completed_tps_including_drain": 588.784,
+      "latency_ms": {
+        "median": 1.512,
+        "p95": 2.051,
+        "p99": 3.755,
+        "max": 6.441
+      },
+      "service_ms": {
+        "p95": 2.051,
+        "p99": 3.755
+      },
+      "queue_delay_ms": {
+        "p95": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "lock_held_ms": {
+        "p95": 1.879,
+        "p99": 3.521
+      },
+      "retried_operations": 0,
+      "retry_rate_percent": 0.0,
+      "lock_events": 0,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": true,
+      "acceptance_failures": [],
+      "workload": {
+        "create": 160,
+        "credit": 320,
+        "guarded_debit": 320
+      },
+      "concurrency": 1,
+      "elapsed_seconds": 1.359,
+      "wal": {
+        "bytes_before_checkpoint": 4185952,
+        "checkpoint_busy": 0,
+        "log_frames": 511,
+        "checkpointed_frames": 511
+      }
+    },
+    {
+      "scheduled_operations": 800,
+      "succeeded": 800,
+      "applied_mutations": 800,
+      "completed_tps_including_drain": 499.505,
+      "latency_ms": {
+        "median": 1.717,
+        "p95": 2.524,
+        "p99": 171.927,
+        "max": 1087.085
+      },
+      "service_ms": {
+        "p95": 2.524,
+        "p99": 171.927
+      },
+      "queue_delay_ms": {
+        "p95": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "lock_held_ms": {
+        "p95": 2.172,
+        "p99": 4.02
+      },
+      "retried_operations": 0,
+      "retry_rate_percent": 0.0,
+      "lock_events": 0,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": true,
+      "acceptance_failures": [],
+      "workload": {
+        "create": 160,
+        "credit": 320,
+        "guarded_debit": 320
+      },
+      "concurrency": 4,
+      "elapsed_seconds": 1.602,
+      "wal": {
+        "bytes_before_checkpoint": 4177712,
+        "checkpoint_busy": 0,
+        "log_frames": 488,
+        "checkpointed_frames": 488
+      }
+    },
+    {
+      "scheduled_operations": 800,
+      "succeeded": 800,
+      "applied_mutations": 800,
+      "completed_tps_including_drain": 390.104,
+      "latency_ms": {
+        "median": 1.906,
+        "p95": 2.605,
+        "p99": 656.098,
+        "max": 2050.513
+      },
+      "service_ms": {
+        "p95": 2.605,
+        "p99": 656.098
+      },
+      "queue_delay_ms": {
+        "p95": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "lock_held_ms": {
+        "p95": 2.188,
+        "p99": 4.286
+      },
+      "retried_operations": 4,
+      "retry_rate_percent": 0.5,
+      "lock_events": 4,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": false,
+      "acceptance_failures": [
+        "p99 > 250 ms"
+      ],
+      "workload": {
+        "create": 160,
+        "credit": 320,
+        "guarded_debit": 320
+      },
+      "concurrency": 8,
+      "elapsed_seconds": 2.051,
+      "wal": {
+        "bytes_before_checkpoint": 4177712,
+        "checkpoint_busy": 0,
+        "log_frames": 429,
+        "checkpointed_frames": 429
+      }
+    },
+    {
+      "scheduled_operations": 800,
+      "succeeded": 800,
+      "applied_mutations": 800,
+      "completed_tps_including_drain": 326.932,
+      "latency_ms": {
+        "median": 1.874,
+        "p95": 3.888,
+        "p99": 1639.439,
+        "max": 2446.451
+      },
+      "service_ms": {
+        "p95": 3.888,
+        "p99": 1639.439
+      },
+      "queue_delay_ms": {
+        "p95": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "lock_held_ms": {
+        "p95": 2.229,
+        "p99": 3.825
+      },
+      "retried_operations": 12,
+      "retry_rate_percent": 1.5,
+      "lock_events": 13,
+      "final_lock_failures": 0,
+      "invariant_failures": [],
+      "acceptance_passed": false,
+      "acceptance_failures": [
+        "p99 > 250 ms",
+        "retry rate >= 1%"
+      ],
+      "workload": {
+        "create": 160,
+        "credit": 320,
+        "guarded_debit": 320
+      },
+      "concurrency": 16,
+      "elapsed_seconds": 2.447,
+      "wal": {
+        "bytes_before_checkpoint": 4297192,
+        "checkpoint_busy": 0,
+        "log_frames": 477,
+        "checkpointed_frames": 477
+      }
+    }
+  ],
+  "capacity_assessment": {
+    "projected_peak_tps": 17.0,
+    "twice_projected_peak_tps": 34.0,
+    "offered_tps": 34.0,
+    "repeat_count": 3,
+    "every_repeat_passed": true,
+    "twice_peak_capacity_gate_passed": true,
+    "highest_p95_ms": 17.601,
+    "highest_p99_ms": 18.595,
+    "highest_retry_rate_percent": 0.0,
+    "total_final_lock_failures": 0,
+    "total_invariant_failures": 0,
+    "minimum_completed_within_window_tps": 34.0,
+    "saturation_diagnostic_tps": 499.505,
+    "postgresql_start_tps": 249.75,
+    "postgresql_complete_tps": 349.65,
+    "postgresql_load_trigger_reached": false
+  },
+  "diagnostics": {
+    "duplicate_creation": {
+      "concurrency": 16,
+      "created_outcomes": 1,
+      "existing_outcomes": 15,
+      "stored_players": 1,
+      "stored_wallets": 1,
+      "passed": true
+    },
+    "rollback": {
+      "injected_error": "injected failure before postings",
+      "requests_after_rollback": 0,
+      "ledgers_after_rollback": 0,
+      "wallet_after_rollback": 1000,
+      "passed": true
+    },
+    "wal_reader": {
+      "reader_latency_ms": 0.292,
+      "reader_saw_pre_transaction_value": true,
+      "passed": true
+    },
+    "busy_timeout": {
+      "configured_ms": 1000,
+      "observed_ms": 1163.248,
+      "raised_locked": true,
+      "within_tolerance": true,
+      "passed": true
+    },
+    "retry_recovery": {
+      "attempts": 2,
+      "lock_events": 1,
+      "latency_ms": 1459.621,
+      "within_budget": true,
+      "invariant_failures": [],
+      "passed": true
+    },
+    "retry_exhaustion": {
+      "attempts": 3,
+      "lock_events": 3,
+      "latency_ms": 2914.607,
+      "within_budget": true,
+      "passed": true
+    },
+    "guarded_contention": {
+      "concurrency": 16,
+      "starting_balance": 5,
+      "applied": 5,
+      "insufficient": 11,
+      "ending_balance": 0,
+      "ledger_transactions": 5,
+      "retirement_balance": 5,
+      "passed": true
+    },
+    "idempotency": {
+      "first_applied": true,
+      "same_key_same_fingerprint_applied": false,
+      "same_key_mismatched_fingerprint_rejected": true,
+      "distinct_transport_same_business_applied": false,
+      "wallet_delta": 1,
+      "ledger_transactions": 1,
+      "transport_requests": 2,
+      "business_entitlements": 1,
+      "passed": true
+    }
+  },
+  "limitations": [
+    "This is a disposable candidate-persistence workload, not a production schema.",
+    "The final mining/gameplay transaction requires its own later load gate.",
+    "The deployment host is not selected; storage metadata describes this development run.",
+    "Discord/network time is excluded because no transaction may wait on either."
+  ]
+}

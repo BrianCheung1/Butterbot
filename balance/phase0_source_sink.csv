@@ -1,0 +1,5 @@
+model_version,cohort,daily_action_source_ev,daily_claim_source_ev,weekly_objective_source_ev_per_day,total_source_ev_per_day,source_variance_per_day,tool_charge_sink_ev_per_day,crafting_sink_ev_per_day,npc_supplies_sink_ev_per_day,aspirational_sink_ev_per_day,total_recurring_sink_ev_per_day,recurring_sink_variance_per_day
+phase0-v1,casual,52.57,8.57,4.29,65.43,329.14,13.71,9.14,4.57,2.29,29.71,57.14
+phase0-v1,regular,203.06,12.86,7.71,223.63,1309.45,51.43,35.31,17.66,17.66,122.06,220.71
+phase0-v1,dedicated,621.00,15.00,8.57,644.57,4199.04,150.00,108.00,54.00,81.00,393.00,675.00
+phase0-v1,optimized_hardcore,952.20,15.00,8.57,975.77,6855.84,270.00,165.60,82.80,165.60,684.00,1035.00

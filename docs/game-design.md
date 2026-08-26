@@ -59,19 +59,25 @@ A player is global to the Butterbot economy and is keyed to one Discord user ide
 are interaction venues, not separate copies of the player or currency. Leaving one guild does
 not fork or delete progression.
 
-The player record owns identity and lifecycle facts only:
+The core player record owns identity and lifecycle facts only:
 
 - internal player identifier and unique Discord user identifier;
-- creation time, status, and last-known display metadata used only as a cache;
-- account XP and level progression reference;
-- explicit moderation/economy restriction state; and
+- creation time and the minimal lifecycle state needed to distinguish an active identity from a
+  later pseudonymized/deleted identity;
+- optional last-known display metadata used only as a cache; and
 - settings that affect presentation, never economic rules.
 
-Balances, inventory, equipment, professions, achievements, and collections are separate
-owned records or aggregates. A Discord username is mutable and is never a key. Guild
-membership is not required to retain progress. Derived player statistics are calculated from
-base progression, profession/mastery unlocks, equipment, and temporary effects; a mutable
-"total power" field is not a source of truth.
+Wallets and balances belong to Economy. Account XP/level and all profession state belong to
+Progression. Restrictions, freezes, durable capabilities, and access audit belong to
+Safety/access. Inventory, equipment, achievements, and collections likewise remain separate
+owned records or aggregates. The Phase 0 baseline therefore does not add XP columns or
+restriction/capability columns to the player table and does not create progression or
+safety/access tables.
+
+A Discord username is mutable and is never a key. Guild membership is not required to retain
+progress. Derived player statistics are calculated from progression, profession/mastery
+unlocks, equipment, and temporary effects; a mutable "total power" field is not a source of
+truth.
 
 ## Interaction of systems
 

@@ -32,6 +32,13 @@ Only the owning repository writes a table. Cross-owner foreign keys may enforce 
 ownership, but cross-system use cases coordinate owners in one application transaction. Read
 models may join owners for queries and must not become a backdoor for mutations.
 
+For the first schema, the player table is limited to global identity, creation time, and minimal
+lifecycle state. Account XP/level is Progression state, and restrictions/capabilities/audit are
+Safety/access state; neither is stored as columns on the player row. The Phase 0 baseline creates
+no progression or safety/access tables. Until Slice 1.3 supplies durable restrictions, `/join`
+checks only the application-level global join/mutation eligibility boundary documented in
+`architecture.md` and never creates placeholder safety state.
+
 ## Identifier and timestamp conventions
 
 - Durable entity and transaction identifiers are application-generated UUIDv4 values. Use
@@ -134,6 +141,19 @@ The provisional acceptance envelope is p95 transaction time at or below 100 ms, 
 below 250 ms, fewer than 1% attempts requiring a busy retry, no final lock failures, and no
 invariant/idempotency failure. The measured sustainable write rate and projected launch peak
 are recorded with the test rather than guessed in this document.
+
+The accepted projected launch peak is 17 mutation transactions/second, derived in
+`decisions.md`; Phase 0 therefore requires 34 offered transactions/second. The 2026-08-25
+open-loop candidate-persistence run is recorded in `sqlite-capacity.md`. On the development host,
+all three 30-second measurement runs completed 34.0 transactions/second inside the measurement
+window after a 10-second warm-up. Worst-repeat p95/p99 were 17.601/18.595 ms, with no retry,
+final lock, backlog, or invariant failure. Slice 0.3 passes for the accepted assumption.
+
+Closed-loop saturation remains a diagnostic rather than the acceptance method. Four writers
+were the highest tested passing level at 499.505 transactions/second; eight failed p99. Until a
+deployment-host rerun replaces these planning values, use one process, at most four in-flight
+writers, 249.75 transactions/second as the provisional PostgreSQL-start rate, and 349.65 as the
+provisional migration-completion rate. These are warning thresholds, not capacity promises.
 
 Begin PostgreSQL migration work when any of these occurs: projected peak reaches 50% of the
 measured sustainable SQLite rate; p95 exceeds 100 ms or retry rate exceeds 1% for three peak

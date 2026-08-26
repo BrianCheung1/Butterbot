@@ -110,6 +110,32 @@ thresholds in `database.md`; crossing them starts PostgreSQL work before failure
 **Consequence:** Multiple bot writers are not supported on SQLite. Performance settings may be
 changed only with recorded durability/load evidence.
 
+### 2026-08-25 — Disposable SQLite capacity result
+
+**Context:** The Phase 0 experiment measured a benchmark-only candidate player/wallet and
+ledger/idempotency write mix. It did not create an Alembic migration or model the final mining
+transaction. The accepted projected launch peak is 17 mutation transactions/second, making the
+required open-loop offered rate 34 transactions/second.
+
+**Decision:** Retain WAL, `synchronous=FULL`, 1,000 ms busy timeout, one process, and at most two
+busy retries inside three seconds. Use 25/75 ms retry backoff and reserve 200 ms of the final
+deadline for scheduling overhead. Budget 50 ms from writer-lock acquisition through commit.
+Accept the open-loop result: three fresh-database repeats, each with a 10-second warm-up and
+30-second measurement window, offered and completed 34.0 transactions/second. The worst p95/p99
+were 17.601/18.595 ms; no operation retried, failed, accumulated as backlog, or violated an
+invariant. Guarded-debit and idempotency diagnostics also passed.
+
+Retain closed-loop saturation only as a contention diagnostic. On this development host, four
+writers passed at 499.505 transactions/second and eight failed p99. Use 249.75 TPS (50%) as the
+provisional PostgreSQL-start rate and 349.65 TPS (70%) as the provisional migration-completion
+rate, subject to replacement by deployment-host and full-transaction runs.
+
+**Consequence:** Eight writers failed the saturation p99 gate, so adding writers is not a scaling
+strategy. Slice 0.3 passes for the accepted projected peak and does not trigger PostgreSQL. The
+complete gameplay transaction and the selected deployment host must still be benchmarked before
+public economic mutations. Details and raw evidence are in `sqlite-capacity.md` and
+`evidence/sqlite-capacity-2026-08-25.json`.
+
 ### 2026-08-25 — Hybrid item ownership and availability
 
 **Decision:** Fungible stackable items use integer holdings keyed by stable item identity;
@@ -131,16 +157,96 @@ than replacing it.
 - Any progression-required random drop has a deterministic fallback.
 - Treat seasons as rotating content by default, not automatic permanent-progress resets.
 
+### 2026-08-25 — Phase 0 numerical envelope and first recurring sink
+
+**Context:** Repeatable NPC selling requires a credible multi-horizon source/sink and progression
+envelope plus a recurring sink that scales with profitable activity. A finite shop or cosmetic
+catalog alone does not satisfy that gate.
+
+**Decision:** Accept `phase0-v1` in `docs/economy-simulation.md` as the architecture envelope.
+Its single TOML configuration models casual, regular, dedicated, optimized/hardcore, returning,
+and alternate-account behavior at one day through three years. The initial acceptable bands
+include a 15% aggregate permanent-yield cap, a 30-action full-reward allowance with 40% overflow
+EV, 45–71% recurring source absorption, and a mixed-cohort six-month-plus net-supply target of
+roughly 15–30% of cumulative minting.
+
+Select non-destructive tool charges as the Slice 2.5 sink. Each profitable action consumes a
+transparent charge; zero charges disable the equipment bonus rather than destroy the tool or
+block the base action. Refills retire coins and must be public, affordable, and measured before
+repeatable NPC selling becomes public. The current 6-coin action cost, 15-coin daily reward,
+source EV, curve, and milestone prices are provisional inputs within the envelope, not approved
+production content.
+
+**Consequence:** Every later source, sink, progression curve, material loop, and permanent
+modifier is simulated against the same cohorts and horizons and reports the measurements listed
+in `docs/economy-simulation.md`. Changing an envelope bound or selected sink requires a versioned
+model and replacement decision. Slice 2.5 still owns the gameplay implementation and validation;
+this decision adds no command or schema.
+
+### 2026-08-25 — First-schema state ownership and interim join eligibility
+
+**Context:** Earlier game-design wording placed account XP and restriction state on the core
+player record even though the architecture assigns those concerns to Progression and
+Safety/access. Following that wording would silently pull later-slice columns or tables into the
+Phase 0 baseline.
+
+**Decision:** Players owns only global Discord identity, creation time, and minimal lifecycle
+state. Economy owns wallets and monetary state. Progression exclusively owns account and
+profession XP/levels. Safety/access exclusively owns restrictions, freezes, durable
+capabilities, approvals, and access audit. The Phase 0 baseline contains no progression or
+safety/access state.
+
+Before Slice 1.3, `/join` evaluates only a narrow application-level global eligibility policy.
+It may be rejected when mutations are globally disabled or startup/schema readiness is unsafe;
+there is no player-specific durable restriction yet. Discord roles are not authority, and join
+does not create placeholder restriction or progression rows. Slice 1.1 tests this boundary with
+an injected fake; Slice 1.3 supplies its durable central-policy adapter.
+
+**Consequence:** The first migration can remain minimal without weakening the long-term ownership
+model, and later progression/safety migrations are additive rather than reinterpretations of a
+player row.
+
+### 2026-08-25 — Projected launch mutation peak for the Phase 0 SQLite gate
+
+**Context:** The capacity experiment could not satisfy its twice-peak requirement without an
+accepted launch traffic assumption. The Phase 0 economy model already uses 1,000 modeled active
+players and a 50%/30%/15%/5% cohort mix, but it did not translate that activity into a peak write
+arrival rate.
+
+**Decision:** Accept **17 mutation transactions/second** as the Phase 0 projected launch peak and
+**34 transactions/second** as the required twice-peak offered rate. This is a reviewable planning
+input, not a production promise. Its derivation is:
+
+- 1,000 launch active players, matching the aggregate Phase 0 supply worksheet;
+- 100 simultaneous peak sessions, assuming 10% of those active players overlap during the
+  busiest window;
+- one submitted command per session per 10 seconds at peak, which places the model's weighted
+  13.63 daily commands in a roughly 2 minute 16 second concentrated session inside the product's
+  one-to-five-minute useful-session target;
+- a 95.30% mutation share: 9.71 profession actions, 2.43 conversion/spending operations, 0.74
+  daily claims, and 0.11 weekly-objective claims divided by 13.63 total modeled commands;
+- 9.53 normal interactive mutations/second (`100 × 0.9528 ÷ 10`);
+- an additive onboarding burst of 100 joins over 60 seconds, or 1.67 mutations/second; and
+- a 1.5 burst factor for arrival clustering and model error, producing 16.80, rounded up to 17.
+
+The open-loop benchmark must offer 34 transactions/second after warm-up for every measured run.
+The assumption is replaced, not silently tuned, when launch population, session telemetry, or
+hosting plans provide better evidence.
+
+**Consequence:** SQLite passes Slice 0.3 only if every repeated twice-peak run meets the existing
+p95/p99, retry, final-lock, and invariant gates. PostgreSQL work begins if the measured result or
+any independent trigger in `database.md` fires.
+
 ## Remaining unresolved decisions
 
 These do not alter the approved initial player/wallet/ledger identity, but each gates its named
 slice:
 
-- Phase 0 balance-envelope numbers: action cadence, initial daily amount, progression bands,
-  source/sink expected values, first activity-scaled recurring sink, stockpile targets, and
-  launch cohort assumptions
-- Measured SQLite sustainable write rate and projected peak; the thresholds and configuration
-  are accepted, but the empirical result must be recorded before the first migration
+- Validation of the provisional Phase 0 action cadence, cohort mix, daily amount, source/sink EV
+  and variance, stockpile targets, and progression bands against play tests and production
+  telemetry; changes require a new model version
+- Replacement of the accepted 17 TPS projected launch peak when measured launch/session evidence
+  becomes available; a changed peak requires a new twice-peak benchmark result
 - Deployment/CI/hosting, backup owner, recovery objectives, observability stack, and bootstrap
   administrator Discord identities
 - Administrator monetary ceilings and alert destinations before the grant slice
@@ -149,9 +255,10 @@ slice:
 - Transfer account-age/progression gates, numerical rolling limits, fee decision, sanctions,
   privacy, alert thresholds, and manual-review/appeal owner before transfers
 - Daily claim period/grace behavior and target share of ordinary income
-- Exact level curves, content tiers, target cohort playtimes, and account-versus-profession XP
-  sources before public profession rewards
-- Initial recurring sink selection and implementation before repeatable NPC selling
+- Exact shipped level curves, content tiers, target cohort playtimes, and account-versus-
+  profession XP sources before public profession rewards
+- Tool-charge capacity, refill bundle/price, base-tool behavior, and implementation validation
+  before repeatable NPC selling; permanent breakage remains unapproved
 - Rarity names, binding rules by item, inventory limits, durability/repair selection, and
   permanent-breakage policy before affected item/equipment content
 - Mastery curve migration, respecialization accounting, and future node/excess-XP policy before

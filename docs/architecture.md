@@ -93,6 +93,26 @@ They are not microservices. A coordinating application service can call multiple
 policies/repositories within its unit of work; one feature must not update another feature's
 tables through ad hoc SQL.
 
+### First-schema ownership boundary
+
+The Phase 0 baseline keeps these ownership lines literal rather than placing future state on a
+convenient player row:
+
+- Players owns the global Discord identity, creation time, and minimal lifecycle state only.
+- Economy owns the one initial wallet, monetary accounts, committed ledger, projections, and
+  transport-idempotency persistence needed by the first money slices.
+- Progression owns account XP/level as well as profession XP/state. No XP or level column belongs
+  to the Phase 0 player record, and progression tables begin only with their named later slice.
+- Safety/access owns restrictions, freezes, durable administrator capabilities, approvals, and
+  access audit. Those tables begin with Slice 1.3, not the Phase 0 baseline.
+
+Before Slice 1.3, `/join` has no player-specific durable restriction record to consult. Its
+application contract still depends on a narrow join-eligibility policy: the production adapter
+can reject all joins when mutations are globally disabled or startup/schema readiness is not
+satisfied, while Slice 1.1 tests the allowed and globally-disabled outcomes with a fake. It must
+not infer authority from Discord roles, create placeholder restriction rows, or add progression
+state. After Slice 1.3, the same application boundary is backed by the durable central policy.
+
 ## Cross-system contracts
 
 Common contracts should remain few and concrete:

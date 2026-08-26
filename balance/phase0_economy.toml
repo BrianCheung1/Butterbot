@@ -1,0 +1,169 @@
+[model]
+version = "phase0-v1"
+
+[[horizons]]
+key = "one_day"
+days = 1
+
+[[horizons]]
+key = "one_week"
+days = 7
+
+[[horizons]]
+key = "one_month"
+days = 30
+
+[[horizons]]
+key = "three_months"
+days = 91
+
+[[horizons]]
+key = "six_months"
+days = 182
+
+[[horizons]]
+key = "one_year"
+days = 365
+
+[[horizons]]
+key = "three_years"
+days = 1095
+
+[activity]
+full_reward_actions_per_active_day = 30
+overflow_reward_bps = 4000
+material_units_ev_numerator = 3
+material_units_ev_denominator = 1
+material_npc_value = 10
+material_sale_bps = 7000
+direct_coin_ev_numerator = 2
+direct_coin_ev_denominator = 1
+source_variance_per_rewarded_action = 144
+profession_xp_per_rewarded_action = 10
+account_xp_per_rewarded_action = 2
+conversion_commands_per_100_actions = 15
+spending_commands_per_100_actions = 10
+inspection_commands_per_active_day = 1
+maximum_economic_yield_bonus_bps = 1500
+
+[cadence_rewards]
+daily_claim_coins = 15
+weekly_objective_coins = 60
+weekly_objective_account_xp = 25
+
+[sinks]
+# Selected Phase 0 pre-selling sink: one transparent, non-destructive charge per action.
+tool_charge_coins_per_action = 6
+crafting_coins_per_economic_action = 4
+npc_supplies_coins_per_economic_action = 2
+aspirational_coins_per_economic_action = 4
+material_consumption_bps_of_retained = 8000
+sink_variance_per_economic_action = 25
+
+[[unlocks]]
+key = "starter"
+label = "Starter loop"
+profession_xp = 0
+recommended_purchase_cost = 0
+
+[[unlocks]]
+key = "tool_choice"
+label = "First tool choice"
+profession_xp = 500
+recommended_purchase_cost = 300
+
+[[unlocks]]
+key = "second_tier"
+label = "Second resource tier"
+profession_xp = 3000
+recommended_purchase_cost = 1500
+
+[[unlocks]]
+key = "deep_mine"
+label = "Deep-mine choice"
+profession_xp = 10000
+recommended_purchase_cost = 5000
+
+[[unlocks]]
+key = "specialist"
+label = "Specialist build"
+profession_xp = 25000
+recommended_purchase_cost = 15000
+
+[[unlocks]]
+key = "mastery_ready"
+label = "Mastery-ready band"
+profession_xp = 60000
+recommended_purchase_cost = 30000
+
+[[unlocks]]
+key = "prestige_prep"
+label = "Prestige preparation"
+profession_xp = 120000
+recommended_purchase_cost = 50000
+
+[[cohorts]]
+key = "casual"
+label = "Casual"
+active_days_per_week = 4
+actions_per_active_day = 4
+claim_days_per_week = 4
+weekly_objective_completion_bps = 5000
+economic_yield_bonus_bps = 0
+aspirational_sink_participation_bps = 2500
+launch_population_bps = 5000
+
+[[cohorts]]
+key = "regular"
+label = "Regular"
+active_days_per_week = 6
+actions_per_active_day = 10
+claim_days_per_week = 6
+weekly_objective_completion_bps = 9000
+economic_yield_bonus_bps = 300
+aspirational_sink_participation_bps = 5000
+launch_population_bps = 3000
+
+[[cohorts]]
+key = "dedicated"
+label = "Dedicated"
+active_days_per_week = 7
+actions_per_active_day = 25
+claim_days_per_week = 7
+weekly_objective_completion_bps = 10000
+economic_yield_bonus_bps = 800
+aspirational_sink_participation_bps = 7500
+launch_population_bps = 1500
+
+[[cohorts]]
+key = "optimized_hardcore"
+label = "Optimized / hardcore"
+active_days_per_week = 7
+actions_per_active_day = 45
+claim_days_per_week = 7
+weekly_objective_completion_bps = 10000
+economic_yield_bonus_bps = 1500
+aspirational_sink_participation_bps = 10000
+launch_population_bps = 500
+
+[[sensitivities]]
+key = "returning_regular"
+label = "Returning regular, first weeks back"
+active_days_per_week = 6
+actions_per_active_day = 10
+claim_days_per_week = 6
+weekly_objective_completion_bps = 9000
+economic_yield_bonus_bps = 300
+aspirational_sink_participation_bps = 5000
+catch_up_xp_bonus_bps = 2500
+catch_up_active_days = 14
+
+[[sensitivities]]
+key = "alternate_daily_only"
+label = "Alternate account claiming and doing one action"
+active_days_per_week = 7
+actions_per_active_day = 1
+claim_days_per_week = 7
+weekly_objective_completion_bps = 0
+economic_yield_bonus_bps = 0
+aspirational_sink_participation_bps = 0

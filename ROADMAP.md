@@ -27,6 +27,11 @@ ledger, idempotency, restriction/capability, or audit identity.
 
 ### Slice 0.2: Initial balance envelope and simulator — depends on 0.1, Spine
 
+**Completed 2026-08-25:** `docs/economy-simulation.md` records the configurable `phase0-v1`
+envelope, tracked worksheets, cohort/sensitivity results, acceptable ranges, and the selected
+non-destructive tool-charge sink. Exact shipped content remains gated by its documented ranges
+and production telemetry.
+
 Build a design worksheet/simulator—not gameplay—for casual, regular, optimized, returning, and
 alternate-account cohorts. Record actions/day, commands and elapsed time per milestone,
 source/sink expected value and variance, content/unlock bands, multiplier budget, expected coin
@@ -35,6 +40,12 @@ the first sink required before NPC selling. Exact later-game content may remain 
 the first loop must fit a credible extensible daily/weekly/monthly envelope.
 
 ### Slice 0.3: Disposable SQLite capacity experiment — depends on 0.1, Spine
+
+**Completed 2026-08-25:** the open-loop candidate-persistence benchmark passed three 30-second
+measurement runs at the accepted twice-peak rate of 34 offered transactions/second after a
+10-second warm-up per run. Guarded-debit contention, transport and business idempotency,
+rollback, WAL behavior, busy timeout, and bounded retries passed. The load result does not
+trigger PostgreSQL. Details and freshness-checked evidence are in `docs/sqlite-capacity.md`.
 
 Benchmark candidate player/wallet creation and representative ledger/idempotency writes at
 twice the projected launch peak from 0.2. Validate `foreign_keys=ON`, WAL,
@@ -64,7 +75,9 @@ public economic mutations instead of weakening durability or retry guarantees.
 A Discord user explicitly creates or retrieves one global player and wallet. The interaction
 ID protects transport replay; unique Discord-player and player-wallet constraints protect the
 business fact. Competing first use converges on one result. Test restriction behavior,
-rollback, privacy, and no privileged intents.
+rollback, privacy, and no privileged intents. Before Slice 1.3, restriction behavior means the
+documented application-level global join/mutation eligibility policy; `/join` does not create or
+query player-specific restriction rows.
 
 ### Slice 1.2: Pure private `/balance` — depends on 1.1, Spine
 

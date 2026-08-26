@@ -56,6 +56,13 @@ and invariant failures. Run the disposable player/ledger experiment before the f
 and the full representative action transaction before public mining, using the acceptance and
 PostgreSQL thresholds in `database.md`.
 
+The Phase 0 acceptance run is an open-loop offered-rate test at twice projected peak, not a
+closed-loop saturation comparison. It uses a warm-up, a sustained measurement window, and
+multiple fresh-database repeats; queue delay and measurement-window backlog remain visible.
+Ordinary tests cover its scheduler/capacity calculation, WAL/busy/retry behavior, guarded debit,
+transport and business idempotency semantics, and a source fingerprint that detects stale checked
+evidence without running the full load test in pytest.
+
 ## Open questions
 
 - Which Python 3.13 versions and operating systems will CI cover?

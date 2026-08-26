@@ -42,5 +42,11 @@ pyright
 pytest
 ```
 
+Regenerate the Phase 0 economic/progression worksheets:
+
+```powershell
+python -m butterbot.simulation
+```
+
 Start with [the documentation index](docs/README.md) before making design or architecture
 decisions. The dependency-ordered implementation plan is in [ROADMAP.md](ROADMAP.md).

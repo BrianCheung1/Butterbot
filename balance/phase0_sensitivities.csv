@@ -1,0 +1,15 @@
+model_version,sensitivity,horizon,actions_per_day,expected_income_coins,expected_spending_coins,coin_stockpile,profession_xp,daily_reward_share_bps,sink_source_ratio_bps
+phase0-v1,returning_regular,one_day,8.57,223.63,122.06,101.57,107.14,574,5458
+phase0-v1,returning_regular,one_week,8.57,1565.40,1154.40,411.00,750.00,574,7374
+phase0-v1,returning_regular,one_month,8.57,6708.86,3961.71,2747.14,2921.43,574,5905
+phase0-v1,returning_regular,three_months,8.57,20350.20,12907.20,7443.00,8150.00,574,6342
+phase0-v1,returning_regular,six_months,8.57,40700.40,29014.40,11686.00,15950.00,574,7128
+phase0-v1,returning_regular,one_year,8.57,81624.43,66350.86,15273.57,31635.71,574,8128
+phase0-v1,returning_regular,three_years,8.57,244873.29,185452.57,59420.71,94207.14,574,7573
+phase0-v1,alternate_daily_only,one_day,1.00,38.00,12.00,26.00,10.00,3947,3157
+phase0-v1,alternate_daily_only,one_week,1.00,266.00,84.00,182.00,70.00,3947,3157
+phase0-v1,alternate_daily_only,one_month,1.00,1140.00,360.00,780.00,300.00,3947,3157
+phase0-v1,alternate_daily_only,three_months,1.00,3458.00,1392.00,2066.00,910.00,3947,4025
+phase0-v1,alternate_daily_only,six_months,1.00,6916.00,2484.00,4432.00,1820.00,3947,3591
+phase0-v1,alternate_daily_only,one_year,1.00,13870.00,6180.00,7690.00,3650.00,3947,4455
+phase0-v1,alternate_daily_only,three_years,1.00,41610.00,19940.00,21670.00,10950.00,3947,4792
