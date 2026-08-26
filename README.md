@@ -50,3 +50,5 @@ python -m butterbot.simulation
 
 Start with [the documentation index](docs/README.md) before making design or architecture
 decisions. The dependency-ordered implementation plan is in [ROADMAP.md](ROADMAP.md).
+The accepted initial production operating contract is in
+[docs/operations.md](docs/operations.md); no production persistence has been implemented yet.

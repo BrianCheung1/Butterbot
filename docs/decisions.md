@@ -188,13 +188,13 @@ this decision adds no command or schema.
 **Context:** Earlier game-design wording placed account XP and restriction state on the core
 player record even though the architecture assigns those concerns to Progression and
 Safety/access. Following that wording would silently pull later-slice columns or tables into the
-Phase 0 baseline.
+first production baseline designed during Phase 0.
 
 **Decision:** Players owns only global Discord identity, creation time, and minimal lifecycle
 state. Economy owns wallets and monetary state. Progression exclusively owns account and
 profession XP/levels. Safety/access exclusively owns restrictions, freezes, durable
-capabilities, approvals, and access audit. The Phase 0 baseline contains no progression or
-safety/access state.
+capabilities, approvals, and access audit. The first production baseline contains no progression
+or safety/access state.
 
 Before Slice 1.3, `/join` evaluates only a narrow application-level global eligibility policy.
 It may be rejected when mutations are globally disabled or startup/schema readiness is unsafe;
@@ -237,6 +237,45 @@ hosting plans provide better evidence.
 p95/p99, retry, final-lock, and invariant gates. PostgreSQL work begins if the measured result or
 any independent trigger in `database.md` fires.
 
+### 2026-08-25 — Initial deployment, recovery, and operational authority
+
+**Context:** The development-host SQLite result could not by itself make a future production
+economy safe. A first migration needs a concrete deployment shape, fail-closed database
+readiness, recoverability targets, and an operator boundary before real state exists.
+
+**Decision:** The initial deployment is one `systemd`-managed bot process on one long-lived
+Linux VM, using persistent local SSD-backed ext4/XFS storage for SQLite and encrypted,
+retention-protected off-host object storage for backups. There is no second economic writer,
+shared/network database volume, or ephemeral database filesystem. Production keeps WAL,
+`synchronous=FULL`, foreign keys, the 1,000 ms busy timeout, and the accepted bounded retry
+policy. Startup opens an existing database, verifies integrity, foreign keys, pragmas, and the
+exact expected Alembic revision, and exits rather than creating, migrating, or serving against
+missing/behind/ahead/incompatible state.
+
+Backups run every 15 minutes through SQLite's online backup API, keep 15-minute points for 48
+hours, daily points for 35 days, and monthly points for 12 months, and are independently opened,
+checked, checksummed, and restored in drills. The initial objectives are a 15-minute RPO and a
+two-hour RTO to verified service with mutations disabled.
+
+Deployment authority comes from audited host/cloud/secret/backup access, not Discord roles.
+Before Slice 1.3, the strictly parsed deployment setting
+`BUTTERBOT_ECONOMY_MUTATIONS_ENABLED` defaults to false and gates every durable mutation without
+creating player restriction rows. Slice 1.3 will consume a reviewed explicit Discord-snowflake
+bootstrap list once to create durable audited capabilities; guild roles remain non-authoritative.
+Structured application/database/startup/backup logs provide the initial metrics contract and a
+small alert sink; no large monitoring platform is selected.
+
+The accepted 17 TPS projection and 34 TPS open-loop gate are unchanged. The identical accepted
+benchmark must pass on the selected production host and database volume before public durable
+mutations, and must be repeated after material host/runtime/storage changes.
+
+**Consequence:** Slice 0.4 resolves the operational design input without provisioning speculative
+infrastructure or creating the first migration. Actual host/backup/log/alert provisioning,
+runtime enforcement, a restore drill, and deployment-host evidence become measurable deployment
+or public-enable prerequisites in `operations.md`. A second writer, unsafe filesystem, unmet
+recovery objective, failed host benchmark, or weakened SQLite setting invalidates this initial
+operating model and keeps mutations disabled while PostgreSQL or host remediation is evaluated.
+
 ## Remaining unresolved decisions
 
 These do not alter the approved initial player/wallet/ledger identity, but each gates its named
@@ -247,8 +286,9 @@ slice:
   telemetry; changes require a new model version
 - Replacement of the accepted 17 TPS projected launch peak when measured launch/session evidence
   becomes available; a changed peak requires a new twice-peak benchmark result
-- Deployment/CI/hosting, backup owner, recovery objectives, observability stack, and bootstrap
-  administrator Discord identities
+- Actual provider/VM instance, off-host backup/log/alert services, and named primary/alternate
+  role holders must be recorded before production deployment; these implement the accepted
+  `operations.md` contract rather than reopen its topology, RPO/RTO, or authority decisions
 - Administrator monetary ceilings and alert destinations before the grant slice
 - Bank gameplay purpose, capacity/protection/fee/interest policy, and treatment by all wealth,
   limit, affordability, leaderboard, and sanction rules before a bank slice

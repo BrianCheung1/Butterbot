@@ -70,7 +70,7 @@ The core player record owns identity and lifecycle facts only:
 Wallets and balances belong to Economy. Account XP/level and all profession state belong to
 Progression. Restrictions, freezes, durable capabilities, and access audit belong to
 Safety/access. Inventory, equipment, achievements, and collections likewise remain separate
-owned records or aggregates. The Phase 0 baseline therefore does not add XP columns or
+owned records or aggregates. The first production baseline therefore does not add XP columns or
 restriction/capability columns to the player table and does not create progression or
 safety/access tables.
 

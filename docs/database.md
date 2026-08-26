@@ -9,8 +9,10 @@ portable constraints and queries.
 
 Application services own transactions through a unit of work. Repository operations use the
 caller's async session, flush when needed, and never silently commit. SQLite foreign-key
-enforcement is enabled on every connection. Production startup refuses to mutate an
-unexpected schema revision.
+enforcement is enabled on every connection. Production startup opens an existing database in
+read/write mode without silently creating or migrating it and refuses normal service against an
+unexpected schema revision. The complete runtime, backup, and recovery contract is in
+`operations.md`.
 
 ## Data ownership and aggregate boundaries
 
@@ -34,9 +36,10 @@ models may join owners for queries and must not become a backdoor for mutations.
 
 For the first schema, the player table is limited to global identity, creation time, and minimal
 lifecycle state. Account XP/level is Progression state, and restrictions/capabilities/audit are
-Safety/access state; neither is stored as columns on the player row. The Phase 0 baseline creates
-no progression or safety/access tables. Until Slice 1.3 supplies durable restrictions, `/join`
-checks only the application-level global join/mutation eligibility boundary documented in
+Safety/access state; neither is stored as columns on the player row. The first production
+baseline creates no progression or safety/access tables. Until Slice 1.3 supplies durable
+restrictions, `/join` checks only the application-level global join/mutation eligibility
+boundary documented in
 `architecture.md` and never creates placeholder safety state.
 
 ## Identifier and timestamp conventions
@@ -103,6 +106,29 @@ The move to PostgreSQL may replace guarded updates with `SELECT ... FOR UPDATE` 
 database features inside the adapter. It must not change visible money, inventory, or
 idempotency semantics.
 
+## Production SQLite startup safety
+
+The first persistence/composition slice must enforce the `operations.md` contract before any
+mutating application service can be composed:
+
+- one bot process holds the deployment's exclusive process lock; backup readers are not
+  mutation writers;
+- the absolute database path resolves to a regular existing file on the approved persistent
+  local data volume, and production connection setup must not create an empty file;
+- `foreign_keys=ON`, `synchronous=FULL`, and `busy_timeout=1000` are applied and verified per
+  connection, while persistent `journal_mode=WAL` is verified;
+- quick integrity and foreign-key checks pass and the database has exactly the Alembic head
+  expected by the running release; and
+- the deployment-owned mutation switch is explicitly enabled and every production-enable
+  prerequisite is satisfied.
+
+A missing database/Alembic table, a behind revision, or an ahead/unknown/multiple head is not an
+automatic migration opportunity: startup logs a schema-readiness failure and exits non-zero.
+Deployment runs reviewed migrations separately with mutations disabled. Integrity, PRAGMA,
+filesystem, or process-lock failure also exits and invokes the incident procedure. This
+fail-closed behavior prevents economic mutation against a silently created, stale, or unsafe
+database.
+
 ## Ledger and history retention
 
 Committed monetary ledger entries, complete item movement audit, action facts, prestige
@@ -119,6 +145,8 @@ committed ledger rows.
 
 ## Migration policy
 
+- The first production economy revision is authorized only after the Final Phase 0 Gate Review;
+  Slice 0.4 creates no migration.
 - Every schema change receives a reviewed Alembic revision; applied revisions are immutable.
 - Test a clean upgrade and an upgrade from every supported production predecessor against a
   real temporary SQLite database.
@@ -155,6 +183,12 @@ deployment-host rerun replaces these planning values, use one process, at most f
 writers, 249.75 transactions/second as the provisional PostgreSQL-start rate, and 349.65 as the
 provisional migration-completion rate. These are warning thresholds, not capacity promises.
 
+Before the first public durable mutation, the identical accepted run must pass on the selected
+production VM and the exact local database volume under normal production host agents. Every
+open-loop repeat and correctness diagnostic must meet the existing gate; the development result
+cannot be substituted for it, and saturation cannot weaken it. Host/storage/runtime changes and
+a replacement projected peak require the reruns listed in `operations.md`.
+
 Begin PostgreSQL migration work when any of these occurs: projected peak reaches 50% of the
 measured sustainable SQLite rate; p95 exceeds 100 ms or retry rate exceeds 1% for three peak
 15-minute windows; a second bot/worker process is required; backup/availability objectives
@@ -168,7 +202,15 @@ that cannot meet freshness needs, reporting pressure itself triggers PostgreSQL 
 
 ## Backup and incident rules
 
-Before real economic data exists, define automated backups, retention, encryption, restore
-drills, and the operator responsible for them. During a suspected economic corruption event,
-disable affected mutations, preserve the database and logs, reconcile, then use compensating
-transactions or a reviewed forward migration. Never repair history with untracked manual SQL.
+The accepted initial policy is a verified SQLite online backup every 15 minutes to encrypted,
+retention-protected off-host storage, with 48 hours of 15-minute points, 35 daily points, and 12
+monthly points. Each backup is independently opened and integrity/foreign-key/schema/checksum
+verified; weekly automated restores and a full pre-public restore drill test the path. The
+targets are a 15-minute RPO and two-hour RTO to verified service with mutations disabled.
+
+During suspected corruption, the deployment operator disables all mutations or stops the bot,
+preserves the original database plus WAL/SHM and logs, and investigates only copies. Recovery
+restores to a new path and verifies integrity, foreign keys, exact schema, and application
+reconciliation before disabled startup. History is repaired only with a reviewed forward
+migration or compensating transaction, never untracked manual SQL. Ownership, procedure,
+retention, verification, and production-enable criteria are normative in `operations.md`.

@@ -152,8 +152,9 @@ rejected:
 
 ## Readiness conclusion
 
-The architecture now has explicit first-schema semantics, but the repository is not yet ready
-to jump directly to `/balance`: Phase 0 must record the balance envelope, disposable SQLite
-load result, operational inputs, and then create/verify the baseline persistence slice. Once
-Phase 0 is complete, the exact next implementation slice is **Slice 1.1: explicit `/join`**;
-**Slice 1.2: pure private `/balance`** follows it.
+The architecture now has explicit first-schema semantics, and Slices 0.2–0.4 have recorded the
+balance envelope, disposable SQLite load result, and operational inputs. Only the explicit Final
+Phase 0 Gate Review may now declare Phase 0 complete and authorize **Slice 1.0: persistence and
+composition foundation**. After that baseline is verified, **Slice 1.1: explicit `/join`** and
+then **Slice 1.2: pure private `/balance`** follow; the repository does not jump directly to a
+command or migration from this review record.

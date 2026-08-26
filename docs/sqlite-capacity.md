@@ -5,7 +5,7 @@
 **Slice 0.3 accepted on 2026-08-25 for the documented launch assumption.** SQLite passed three
 open-loop runs at the required twice-projected-peak rate on the current development host. This
 accepts the candidate persistence and operating-mode gate; it does not make Phase 0 complete,
-start Slice 0.4, or approve public gameplay.
+authorize the first migration, or approve public gameplay.
 
 The experiment uses fresh temporary databases and a disposable `bench_*` schema. It exercises
 player/wallet creation, credits, sufficient-funds and optimistic-version-guarded debits,
@@ -159,8 +159,14 @@ failures still start migration work.
 
 ## Remaining prerequisites
 
-Slice 0.3 is accepted. Phase 0 is not complete. Before a separate Slice 0.4 task can finish, the
-project still needs the deliberately reviewed baseline migration/composition work plus concrete
-deployment, backup ownership, recovery, and observability inputs. The deployment-host rerun is a
-pre-public-economic-mutation requirement because that host is not yet selected; it does not
-authorize weakening this accepted gate.
+Slice 0.3 remains accepted. Slice 0.4 has now selected the operations contract in
+`operations.md`, but only the explicit Final Phase 0 Gate Review can declare Phase 0 complete and
+authorize the first production economy migration. No baseline migration is part of Slice 0.4.
+
+The deployment-host rerun is a pre-public-durable-mutation requirement because that host is not
+yet selected. It uses the exact accepted open-loop configuration and diagnostics on the real
+database volume under normal host agents. Every repeat must still satisfy 99% in-window
+completion, p95 at most 100 ms, p99 at most 250 ms, retry rate below 1%, no final lock, backlog,
+invariant or idempotency failure, and all correctness diagnostics. Failure keeps mutations
+disabled and requires host/storage remediation, replacement evidence, or PostgreSQL—not a weaker
+gate.

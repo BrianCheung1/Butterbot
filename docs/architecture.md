@@ -95,8 +95,8 @@ tables through ad hoc SQL.
 
 ### First-schema ownership boundary
 
-The Phase 0 baseline keeps these ownership lines literal rather than placing future state on a
-convenient player row:
+The first production baseline authorized after Phase 0 keeps these ownership lines literal
+rather than placing future state on a convenient player row:
 
 - Players owns the global Discord identity, creation time, and minimal lifecycle state only.
 - Economy owns the one initial wallet, monetary accounts, committed ledger, projections, and
@@ -104,7 +104,7 @@ convenient player row:
 - Progression owns account XP/level as well as profession XP/state. No XP or level column belongs
   to the Phase 0 player record, and progression tables begin only with their named later slice.
 - Safety/access owns restrictions, freezes, durable administrator capabilities, approvals, and
-  access audit. Those tables begin with Slice 1.3, not the Phase 0 baseline.
+  access audit. Those tables begin with Slice 1.3, not the first baseline.
 
 Before Slice 1.3, `/join` has no player-specific durable restriction record to consult. Its
 application contract still depends on a narrow join-eligibility policy: the production adapter
@@ -179,13 +179,24 @@ is schema-validated, versioned, reviewed, and captured by identifier on economic
 
 ## Operational principles
 
+- The production topology and operational acceptance gates are defined in `operations.md`:
+  one Linux host, one bot process/economic writer, persistent local SQLite storage, off-host
+  backups, and no shared or ephemeral database volume.
 - Structured logs include correlation, use-case, player/account references, content version,
   duration, and outcome without tokens or unnecessary personal data.
 - Metrics cover use-case latency/failures, database contention/retries, idempotent replays,
   ledger reconciliation, and economic flows by reason.
-- Startup verifies database connectivity and expected migration revision before accepting
-  mutating commands. Shutdown stops new work, completes bounded in-flight work, and disposes
-  the engine.
+- Production startup opens an existing database without creating or migrating it, verifies
+  integrity, foreign keys, required SQLite pragmas, the exclusive process lock, and the exact
+  expected migration revision before connecting the normal command surface. Missing, behind,
+  ahead, unknown, or incompatible schema state exits non-zero.
+- The deployment-owned global mutation setting defaults to disabled. Until Slice 1.3 it is the
+  application-level policy for all durable mutations, including `/join`; it is not a Discord
+  role and creates no player restriction rows. Enabling requires schema/runtime readiness,
+  backup/restore readiness, alerting, and accepted deployment-host benchmark evidence.
+- Shutdown stops new mutation work, gives in-flight transactions a bounded ten-second drain,
+  rolls back/cancels remaining sessions, closes Discord, and disposes the engine. Restart
+  repeats every readiness check and preserves WAL sidecars as database state.
 - Background jobs start in-process only if duplicate-safe and reconstructable from durable
   state. Time-critical or high-volume work requires a later durable worker decision.
 - Economic mutations can be globally disabled or restricted during an incident while safe

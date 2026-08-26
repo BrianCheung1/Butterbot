@@ -14,6 +14,8 @@ until validated against content and simulations:
 - [Database](database.md): persistence and migration policy
 - [Phase 0 SQLite capacity](sqlite-capacity.md): disposable benchmark, measured limits, and
   operating recommendations
+- [Phase 0 operations](operations.md): selected deployment topology, startup safety, backups,
+  recovery, observability, operator authority, and production-host validation
 - [Testing](testing.md): verification strategy
 - [Decisions](decisions.md): accepted ADRs, consequences, and remaining gated choices
 - [Economy review resolution](economy-review-resolution.md): disposition and rationale for the

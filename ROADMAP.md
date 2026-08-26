@@ -13,8 +13,9 @@ an approved numerical envelope, abuse controls, a scalable recurring sink, and l
 
 ## Phase 0 — First-schema readiness
 
-No gameplay migration is created before Slices 0.1–0.3 are accepted. Experimental schemas used
-by the load spike are disposable and never become Alembic history.
+No production economy migration is created before Slices 0.1–0.4 and the Phase 0 gate review
+are accepted. Experimental schemas used by the load spike are disposable and never become
+Alembic history.
 
 ### Slice 0.1: Ratify the first-schema contract — Spine
 
@@ -53,24 +54,46 @@ twice the projected launch peak from 0.2. Validate `foreign_keys=ON`, WAL,
 measured sustainable rate, latency/retry results, hardware, and whether the accepted PostgreSQL
 trigger already fires. This experiment does not create a production migration.
 
-### Slice 0.4: Persistence and composition foundation — depends on 0.1–0.3, Spine
+### Slice 0.4: Operations and deployment readiness — depends on 0.1–0.3, Spine
 
-Create the deliberately designed minimal Alembic baseline, async engine/unit of work,
-schema-readiness check, database lifecycle, and backup/restore instructions. Include only the
-player/wallet, committed-ledger/projection, and transport-idempotency structure required by the
-first money slices; safety/access tables arrive with Slice 1.3. Verify clean upgrade,
-constraints, rollback, concurrent account creation support, and portable types. No command
-creates economic value.
+**Completed 2026-08-25:** `docs/operations.md` selects the single-host/single-process SQLite
+topology and records production startup safety, WAL/runtime requirements, fail-closed global
+mutation control, backup ownership and verification, 15-minute RPO/two-hour RTO recovery,
+minimum structured observability, deployment authority, and the unchanged deployment-host
+SQLite validation gate. It creates no migration, command, gameplay feature, or infrastructure.
 
-### Phase 0 gate
+Resolve the concrete hosting, persistence, update/shutdown/restart, secret, database-readiness,
+backup, recovery, observability, and operator/bootstrap contracts required before the first
+production economy migration is authorized. Separate documented Phase 0 blockers from work that
+can exist only when a production host, database, or mutation service exists. Require the
+accepted Slice 0.3 benchmark on the selected deployment host before public durable mutations;
+do not weaken the accepted peak, durability, retry, or latency gate.
 
-Phase 0 is complete only when the ADR, numerical envelope, load result, and baseline migration
-are reviewed together. If the load result triggers PostgreSQL, change the backend before
-public economic mutations instead of weakening durability or retry guarantees.
+### Final Phase 0 gate review
+
+**Pending explicit review:** Slice 0.4 completion makes the repository ready for this review; it
+does not itself declare Phase 0 complete or authorize a migration.
+
+Phase 0 is complete only when the accepted ADRs, numerical envelope, development-host SQLite
+result, and operations/deployment contract are reviewed together and the reviewer explicitly
+authorizes the first production economy migration. If the evidence or topology triggers
+PostgreSQL, change the backend before that migration/public economic mutations instead of
+weakening durability or retry guarantees. The selected deployment-host rerun remains a
+separate pre-public-mutation prerequisite because the host does not yet exist.
 
 ## Phase 1 — Identity, private balance, and trustworthy money
 
-### Slice 1.1: Explicit `/join` — depends on Phase 0, Spine
+### Slice 1.0: Persistence and composition foundation — depends on the Phase 0 gate, Spine
+
+Create the deliberately designed minimal Alembic baseline, async engine/unit of work,
+schema-readiness check, database lifecycle, global mutation eligibility adapter, and initial
+operational telemetry contracts. Include only the player/wallet, committed-ledger/projection,
+and transport-idempotency structure required by the first money slices; safety/access tables
+arrive with Slice 1.3. Verify clean upgrade, constraints, rollback, concurrent account creation
+support, portable types, fail-closed startup, and graceful disposal. No command creates
+economic value.
+
+### Slice 1.1: Explicit `/join` — depends on 1.0, Spine
 
 A Discord user explicitly creates or retrieves one global player and wallet. The interaction
 ID protects transport replay; unique Discord-player and player-wallet constraints protect the
@@ -342,8 +365,9 @@ migration, communication, and retention decision.
 The mandatory initial spine is:
 
 ```text
-0.1 ADR -> 0.2 balance model -> 0.3 load spike -> 0.4 persistence
-  -> 1.1 /join -> 1.2 /balance -> 1.3 admin/safety -> 1.4 grant -> 1.5 ledger controls
+0.1 ADR -> 0.2 balance model -> 0.3 load spike -> 0.4 operations -> Phase 0 gate
+  -> 1.0 persistence -> 1.1 /join -> 1.2 /balance -> 1.3 admin/safety
+  -> 1.4 grant -> 1.5 ledger controls
   -> 2.1 availability + 2.2 progression -> 2.4 mining -> 2.5 recurring sink -> 2.6 selling
   -> Phase 2 simulation/load gate -> public gameplay
 ```
