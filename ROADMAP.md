@@ -22,9 +22,10 @@ Alembic history.
 Review the accepted ADRs in `docs/decisions.md`: global player scope; wallet-only account
 taxonomy; chart of accounts and supply formulas; UUID/snowflake/epoch-millisecond
 representation; `/join` versus pure `/balance`; transport plus business uniqueness; central
-restrictions; administrator approval shape; and SQLite operating mode. Record any replacement
-decision before schema work. Exit criterion: no open choice can change initial player, wallet,
-ledger, idempotency, restriction/capability, or audit identity.
+restrictions; shared Operations ownership of transport idempotency; administrator approval shape;
+and SQLite operating mode. Record any replacement decision before schema work. Exit criterion: no
+open choice can change initial player, wallet, ledger, idempotency, restriction/capability, or
+audit identity.
 
 ### Slice 0.2: Initial balance envelope and simulator — depends on 0.1, Spine
 
@@ -88,10 +89,13 @@ separate pre-public-mutation prerequisite because the host does not yet exist.
 Create the deliberately designed minimal Alembic baseline, async engine/unit of work,
 schema-readiness check, database lifecycle, global mutation eligibility adapter, and initial
 operational telemetry contracts. Include only the player/wallet, committed-ledger/projection,
-and transport-idempotency structure required by the first money slices; safety/access tables
-arrive with Slice 1.3. Verify clean upgrade, constraints, rollback, concurrent account creation
-support, portable types, fail-closed startup, and graceful disposal. No command creates
-economic value.
+and generic Operations-owned transport-idempotency structure required by the first mutating
+slices; safety/access tables arrive with Slice 1.3. The idempotency work is limited to the shared
+application port/coordinator, generic request/outcome persistence and SQLAlchemy repository,
+seven-day initial Discord retention metadata/cleanup contract, metrics, and tests. It creates no
+Economy-specific idempotency columns or generic business-uniqueness table. Verify clean upgrade,
+constraints, rollback, concurrent account creation support, portable types, fail-closed startup,
+and graceful disposal. No command creates economic value.
 
 ### Slice 1.1: Explicit `/join` — depends on 1.0, Spine
 
@@ -106,8 +110,10 @@ query player-specific restriction rows.
 
 A joined player views their wallet ephemerally. The query never creates state; an unjoined user
 is invited to `/join`. There is no public other-player wealth command. Support inspection uses
-a durable capability and access audit. Test zero balance, unjoined, frozen, and missing/deleted
-identity behavior.
+a durable capability and access audit. Test zero balance, unjoined, missing/deleted identity,
+and safe balance reads while the application-level global mutation switch is disabled. There is
+no player-specific frozen-balance case before Slice 1.3; that slice owns durable player
+restriction behavior and its read-policy tests.
 
 ### Slice 1.3: Administrator capability, proposal, and freeze workflow — depends on 1.1, Spine
 
@@ -368,7 +374,8 @@ The mandatory initial spine is:
 0.1 ADR -> 0.2 balance model -> 0.3 load spike -> 0.4 operations -> Phase 0 gate
   -> 1.0 persistence -> 1.1 /join -> 1.2 /balance -> 1.3 admin/safety
   -> 1.4 grant -> 1.5 ledger controls
-  -> 2.1 availability + 2.2 progression -> 2.4 mining -> 2.5 recurring sink -> 2.6 selling
+  -> 2.1 availability + 2.2 progression -> 2.3 shop + 2.4 mining
+  -> 2.5 recurring sink -> 2.6 selling
   -> Phase 2 simulation/load gate -> public gameplay
 ```
 

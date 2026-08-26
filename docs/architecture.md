@@ -33,7 +33,8 @@ Dependencies point inward:
 - **Application** imports domain code and declares/uses narrow persistence, clock, random,
   content-catalog, authorization, and mutation-eligibility ports. Each public method represents
   a complete use case and owns its transaction, retry-idempotency, and business-uniqueness
-  boundary.
+  boundary. A shared Operations/application-support coordinator owns transport claim/replay and
+  fingerprint-conflict behavior; domain services retain their own business-uniqueness rules.
 - **Infrastructure** implements ports with async SQLAlchemy, SQLite/PostgreSQL-specific setup,
   content loaders, system clocks, random generators, logging, and operational integrations.
 - **Discord application** parses interactions, defers/responds, invokes one application use
@@ -86,6 +87,7 @@ an outbox record written in the same transaction.
 | Content | Versioned item, profession, drop, recipe, shop, quest definitions | Validated immutable snapshots |
 | Commerce | NPC purchase/sale and eventually trade/escrow workflows | Quotes and atomic exchange operations |
 | Goals | Quest, achievement, collection state and fact-consumption cursors | Progress/claim operations |
+| Operations/application support | Transport-idempotency outcomes, action facts, cross-cutting operational audit | Request replay/retention and operational contracts |
 | Reporting | Leaderboards, economy summaries, support views | Read-only projections |
 
 These are logical ownership boundaries and may initially share one database and transaction.
@@ -99,8 +101,10 @@ The first production baseline authorized after Phase 0 keeps these ownership lin
 rather than placing future state on a convenient player row:
 
 - Players owns the global Discord identity, creation time, and minimal lifecycle state only.
-- Economy owns the one initial wallet, monetary accounts, committed ledger, projections, and
-  transport-idempotency persistence needed by the first money slices.
+- Economy owns the one initial wallet, monetary accounts, committed ledger, and projections.
+- Operations/application support owns the shared transport-idempotency persistence and
+  repository used by `/join` and all future mutating domains. The application coordinator uses
+  it inside the caller's unit of work; Economy does not write it through an Economy repository.
 - Progression owns account XP/level as well as profession XP/state. No XP or level column belongs
   to the Phase 0 player record, and progression tables begin only with their named later slice.
 - Safety/access owns restrictions, freezes, durable administrator capabilities, approvals, and
@@ -112,6 +116,26 @@ can reject all joins when mutations are globally disabled or startup/schema read
 satisfied, while Slice 1.1 tests the allowed and globally-disabled outcomes with a fake. It must
 not infer authority from Discord roles, create placeholder restriction rows, or add progression
 state. After Slice 1.3, the same application boundary is backed by the durable central policy.
+
+### Shared transport idempotency
+
+Transport idempotency is application execution support, not Discord presentation, game-domain
+policy, or database-only behavior. A transport adapter supplies an opaque request key. The
+application coordinator selects the stable use-case namespace, fingerprints actor plus canonical
+semantic input, claims the request through the Operations repository in the use case's unit of
+work, and records the stable applied or typed-rejection outcome before commit. Infrastructure
+implements the repository and cleanup mechanism; it does not decide replay semantics.
+
+The logical uniqueness key is `(namespace, transport_key)`. Namespaces are stable lowercase
+dotted operation names and do not change with releases or balance versions. Same key and
+fingerprint replays the recorded result; a different fingerprint conflicts. Completed initial
+Discord mutation outcomes are retained for seven days, with longer namespace-specific periods
+required for transports that can legitimately redeliver later. Operations owns incremental
+expiry, storage metrics, and the retention registry. Queries create no records.
+
+This facility can be reused by Players, Economy, Inventory, Progression, Safety/access, and
+future domains. It never replaces their business one-use key or expected revision: the owning
+domain persists that protection independently and for the entitlement's required lifetime.
 
 ## Cross-system contracts
 

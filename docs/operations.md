@@ -276,7 +276,9 @@ raw Discord payloads, usernames, raw request fingerprints, and database URLs are
 | `economy.mutation.completed` | use case, `applied`/`replay`/`domain_rejected`/`failed`, transaction and end-to-end duration, attempts; count and p50/p95/p99 per 60-second summary |
 | `database.busy_retry` | use case, attempt, wait and elapsed budget; lock events, retry rate, final lock failures |
 | `economy.mutation.failed` | stable error category and rollback outcome; internal failures separate from expected domain rejection |
-| `economy.idempotency` | transport replay, fingerprint conflict, or business-uniqueness conflict; never log the raw key/fingerprint |
+| `operations.transport_idempotency` | namespace plus replay or fingerprint-conflict outcome; never log the raw key/fingerprint |
+| `operations.transport_idempotency_storage` | live/expired row counts, oldest expiry, cleanup deletions/failures, and cleanup duration |
+| `application.business_uniqueness` | owning domain/use case plus accepted or already-consumed/stale-revision outcome; never log a raw entitlement key |
 | `economy.invariant_failure` | invariant name, affected internal references, detection source; count is expected to remain zero |
 | `database.schema_readiness` | database-path alias, expected/observed revision, each PRAGMA/check result, startup outcome |
 | `database.storage` | main/WAL/SHM bytes, data-volume free bytes/percent, WAL checkpoint busy/result, daily growth |
@@ -290,15 +292,18 @@ The first alert contract is also small and measurable:
 - alert and disable/keep disabled mutations when the newest verified backup is older than 30
   minutes or free storage violates the minimum;
 - warn on one idempotency fingerprint conflict and alert on more than five in five minutes;
+- warn when expired transport-idempotency rows remain after the scheduled incremental cleanup
+  window and alert on repeated cleanup failure;
 - warn on one 15-minute window with p95 over 100 ms, p99 over 250 ms, or retry rate at least 1%;
   three peak windows over the accepted p95/retry limits invoke the PostgreSQL trigger; and
 - alert when internal mutation failures exceed 1% in five minutes or five consecutive attempts,
   excluding typed domain rejections, and notify on every global mutation-state change.
 
-Command/mutation counts, failed mutations, and latency are emitted from the application boundary;
-database retry events come from the database adapter; invariant checks own their critical event;
-startup owns readiness and state; and the backup utility owns backup events. This ownership keeps
-metrics from being guessed in Discord cogs.
+Command/mutation counts, business-uniqueness outcomes, failed mutations, and latency are emitted
+from the owning application boundary; the shared Operations idempotency coordinator emits
+transport replay/conflict outcomes; database retry events come from the database adapter;
+invariant checks own their critical event; startup owns readiness and state; and the backup
+utility owns backup events. This ownership keeps metrics from being guessed in Discord cogs.
 
 ## Deployment-host SQLite validation
 

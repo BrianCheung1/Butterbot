@@ -95,6 +95,10 @@ relevant, and postings. The public transaction history is a safe projection that
 kind, counterparty where appropriate, signed player amount, resulting balance, reason, and a
 stable reference while hiding internal accounts and sensitive operator metadata.
 
+The ledger's transport reference is audit correlation only. The shared Operations/application-
+support facility owns request claim, fingerprint, replay outcome, retention, and cleanup;
+Economy neither owns nor duplicates that persistence.
+
 Stable reason codes come from a validated namespaced registry owned by the economy boundary.
 Content tags may select data but never implicitly choose a source account or execute a rule.
 
@@ -103,8 +107,9 @@ Content tags may select data but never implicitly choose a source account or exe
 All commands and jobs that change value follow these invariants:
 
 1. The application service opens one database transaction for the complete use case.
-2. It claims a **transport idempotency key** and request fingerprint. Replaying the same request
-   returns the recorded result; reusing a key for different input fails.
+2. The shared application idempotency coordinator claims a **transport idempotency key** and
+   request fingerprint through the Operations repository in that transaction. Replaying the
+   same request returns the recorded result; reusing a key for different input fails.
 3. It also enforces **business uniqueness** inside the transaction through a unique domain key
    or expected state revision. A different interaction cannot consume the same entitlement.
 4. It evaluates the central mutation-eligibility policy and validates limits, balances,

@@ -74,6 +74,50 @@ opportunity, trade version, and prestige epoch.
 **Consequence:** Tests must attempt the same business action with different transport IDs.
 Schema slices add the narrow domain constraint they need rather than one generic lock table.
 
+### 2026-08-25 — Shared transport-idempotency ownership
+
+**Context:** Transport replay is not an economic rule: `/join`, later inventory/progression
+mutations, administrator workflows, and non-Discord jobs need the same request-replay semantics.
+Assigning its persistence to Economy would make other domains depend on an unrelated game
+boundary, while treating it as database-only infrastructure would put application behavior in
+the adapter.
+
+**Decision:** Transport idempotency is a shared application-wide facility owned logically by the
+Operations/application-support boundary. The application layer owns the claim/replay/
+fingerprint-conflict semantics and coordinates them inside the mutating use case's unit of work.
+Operations owns the persistence model, repository port, retention policy, cleanup, and storage
+metrics. Infrastructure implements that repository for SQLAlchemy; Economy, Players, Inventory,
+Progression, and future domains neither own nor write the table directly.
+
+The logical key is unique by `(namespace, transport_key)`. A namespace is a stable, lowercase
+dotted application-operation name such as `players.join` or `economy.daily_claim`; it is not
+changed for a deployment or balance/content version. The request fingerprint covers the actor
+and canonical semantic inputs, excluding presentation-only or volatile data. Storage may use a
+collision-resistant key digest, but callers and logs treat the original key as opaque and logs
+never include the raw key or fingerprint.
+
+The application inserts the request claim, executes or rejects the domain use case, records a
+stable replay outcome/reference, and commits them together. A crash or unexpected failure rolls
+back the claim with the use case, so no committed pending record exists. Same key and fingerprint
+returns the recorded result; same key with a different fingerprint is a conflict. Queries do not
+create transport-idempotency records.
+
+Operations assigns every namespace a retention period at least as long as its maximum legitimate
+redelivery window plus investigation margin. Initial Discord mutation namespaces retain completed
+outcomes for seven days. Longer-lived job/webhook namespaces must declare a longer period before
+use. Operations performs incremental cleanup only after `retain_until`, monitors table growth,
+and never treats cleanup as permission to repeat a domain entitlement.
+
+Transport idempotency remains independent of domain/business uniqueness. Each owning domain
+persists its own one-use key, unique constraint, or expected revision for as long as that
+entitlement must remain consumed; expiry of a transport record cannot remove it.
+
+**Consequence:** Non-Economy mutations reuse one facility without importing Economy. Slice 1.0
+may create only the generic Operations-owned request/outcome persistence, application port/
+coordinator, SQLAlchemy repository implementation, retention metadata/cleanup contract, metrics,
+and tests needed by the first mutating slices. It must not add Economy-specific request columns,
+a generic business-uniqueness table, gameplay commands, or domain entitlements.
+
 ### 2026-08-25 — Action facts and eventually consistent goals
 
 **Decision:** Originating use cases atomically apply required costs/rewards/XP and append an
@@ -309,6 +353,7 @@ slice:
   marketplace is justified beyond direct item-for-coin trade
 - Catch-up strength, limited/legacy content, and whether a future season can reset durable
   progression
-- Retention/anonymization periods for action facts, idempotency outcomes, access audits,
-  economic/item history, operational logs, and deleted-player identity
+- Retention/anonymization periods for action facts, access audits, economic/item history,
+  operational logs, and deleted-player identity; transport-idempotency retention is governed by
+  the accepted namespace policy above
 - Background scheduling/durability beyond the initial database fact consumer

@@ -90,6 +90,8 @@ architecture decision and must be repeated on the selected deployment host befor
 economic mutations.
 
 Raw evidence: [`evidence/sqlite-capacity-2026-08-25.json`](evidence/sqlite-capacity-2026-08-25.json).
+The JSON is canonical; the summary tables below are transcriptions of its checked values. This
+documentation-only synchronization does not regenerate evidence or reset its freshness contract.
 
 ## Twice-peak results
 
@@ -98,9 +100,9 @@ drain beyond scheduler granularity, no retry, no final lock failure, and no inva
 
 | Repeat | Offered TPS | Completed-in-window TPS | p95 | p99 | Max | Service p99 | Queue-delay p99 | Lock-held p99 | Result |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 34.0 | 34.0 | 17.427 ms | 18.362 ms | 21.266 ms | 6.824 ms | 15.641 ms | 6.260 ms | pass |
-| 2 | 34.0 | 34.0 | 17.601 ms | 18.595 ms | 21.711 ms | 6.250 ms | 15.700 ms | 5.788 ms | pass |
-| 3 | 34.0 | 34.0 | 17.490 ms | 18.239 ms | 24.184 ms | 6.393 ms | 15.549 ms | 6.014 ms | pass |
+| 1 | 34.0 | 34.0 | 17.432 ms | 18.356 ms | 21.275 ms | 6.816 ms | 15.636 ms | 6.260 ms | pass |
+| 2 | 34.0 | 34.0 | 17.601 ms | 18.595 ms | 21.711 ms | 6.249 ms | 15.700 ms | 5.790 ms | pass |
+| 3 | 34.0 | 34.0 | 17.492 ms | 18.238 ms | 24.183 ms | 6.388 ms | 15.551 ms | 6.006 ms | pass |
 
 The acceptance criteria remain p95 at most 100 ms, p99 at most 250 ms, fewer than 1% of
 operations requiring a busy retry, no final lock failure, no invariant/idempotency failure, and
@@ -129,10 +131,10 @@ provisional operational warning thresholds. It is not the twice-peak acceptance 
 
 | Writers | Completed TPS | p95 | p99 | Retry rate | Final locks | Result |
 | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 588.777 | 2.054 ms | 3.750 ms | 0.000% | 0 | pass |
-| 4 | 499.505 | 2.518 ms | 171.930 ms | 0.000% | 0 | pass |
-| 8 | 390.103 | 2.599 ms | 656.096 ms | 0.500% | 0 | fail: p99 |
-| 16 | 326.931 | 3.889 ms | 1,639.439 ms | 1.500% | 0 | fail: p99 and retry rate |
+| 1 | 588.784 | 2.051 ms | 3.755 ms | 0.000% | 0 | pass |
+| 4 | 499.505 | 2.524 ms | 171.927 ms | 0.000% | 0 | pass |
+| 8 | 390.104 | 2.605 ms | 656.098 ms | 0.500% | 0 | fail: p99 |
+| 16 | 326.932 | 3.888 ms | 1,639.439 ms | 1.500% | 0 | fail: p99 and retry rate |
 
 For this candidate workload on this host, keep one process and at most four in-flight writer
 transactions. The provisional PostgreSQL-start planning rate is 249.75 TPS (50% of the passing

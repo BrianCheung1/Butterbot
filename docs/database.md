@@ -66,7 +66,8 @@ Database constraints backstop, but do not replace, domain rules:
 - exactly one initial wallet per joined player; no bank row exists until a bank ADR is accepted;
 - account-class polarity from `economy-design.md` and non-negative custody/inventory values;
 - non-zero ledger postings and immutable committed ledger rows;
-- unique transport-idempotency key plus request fingerprint within an operation scope;
+- Operations-owned unique transport-idempotency key plus request fingerprint within a stable
+  application-operation namespace;
 - feature-specific domain uniqueness or expected revisions, including `(player, claim_period)`,
   `(campaign, target)`, quote consumption, action opportunity, and state-machine versions as
   relevant;
@@ -82,6 +83,25 @@ Some invariants, such as postings summing to zero, span rows. The application es
 them within one transaction and integration/reconciliation checks verify them. PostgreSQL
 deferred constraints or triggers may be considered later only if they preserve the same
 application contract; SQLite-specific triggers are not the baseline.
+
+## Transport-idempotency persistence ownership
+
+Operations/application support owns the shared transport-request persistence and its repository
+port. The application-layer coordinator calls that port inside the mutating use case's unit of
+work; the SQLAlchemy infrastructure adapter implements it. Economy and other domains can use the
+facility but cannot write its table through their domain repositories.
+
+The first baseline may persist only generic request execution data: stable operation namespace,
+opaque transport-key representation, request fingerprint, stable applied or typed-rejection
+outcome/reference, completion time, and `retain_until`. Logical uniqueness is
+`(namespace, transport_key)`. There is no generic business-entitlement table and no committed
+pending transport state: an unexpected failure rolls the request claim back with the use case.
+
+Initial Discord mutation outcomes remain for seven days. Each later namespace registers a period
+covering its maximum legitimate redelivery window plus investigation margin. Operations owns
+incremental expiry and storage-growth metrics. Expiry never removes ledger/audit history or a
+domain-owned one-use constraint/revision, so an old transport key cannot make a consumed business
+entitlement available again.
 
 ## Concurrency, retry, and idempotency
 
@@ -135,8 +155,9 @@ Committed monetary ledger entries, complete item movement audit, action facts, p
 history, trade history, and administrator corrections are append-only and retained for the
 life of the economy unless a legal/privacy policy requires a designed anonymization process.
 Player deletion should pseudonymize identity where required without breaking conservation or
-audit history. Operational logs and transient idempotency payloads may have shorter retention,
-but keys must outlive every possible Discord/job retry and support incident analysis.
+audit history. Operational logs may have shorter retention. Transport outcomes follow the
+Operations-owned namespace policy above; domain one-use state outlives every period in which its
+entitlement must remain consumed.
 
 Balance projections and read models are rebuildable from authoritative history where the
 design claims they are. Reconciliation checks compare postings with account balances and
