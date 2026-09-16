@@ -1,0 +1,38 @@
+import contextlib, io, json, platform, runpy, subprocess, tempfile
+from pathlib import Path
+from unittest.mock import patch
+from benchmarks import native_linux_gate as gate
+import pytest
+selection = subprocess.check_output([str(Path('.venv/Scripts/python.exe')), '-m', 'pytest', '--collect-only', '-q', '-m', 'native_linux_kernel'], text=True)
+nodes = [line for line in selection.splitlines() if '::test_' in line]
+platform.platform()
+results=[]
+with tempfile.TemporaryDirectory() as d:
+ root=Path(d)
+ def invoke(cases):
+  def fake_run(cmd, **kw):
+   junit=Path(next(x.split('=',1)[1] for x in cmd if x.startswith('--junitxml=')))
+   junit.write_text('<testsuite>'+''.join(cases)+'</testsuite>')
+   return subprocess.CompletedProcess(cmd,0)
+  with patch.object(gate.platform,'system',return_value='Linux'), patch.object(gate,'_optional_posix_call',return_value=lambda:0), patch.object(gate.subprocess,'run',side_effect=fake_run), contextlib.redirect_stdout(io.StringIO()):
+   rc=gate.main(['--parent',str(root),'--report',str(root/'report.json')])
+  return rc,json.loads((root/'report.json').read_text())['result']
+ for target in nodes:
+  states={}
+  for state in ['pass','fail','error','skip','missing']:
+   cases=[]
+   for node in nodes:
+    if node==target and state=='missing':continue
+    outcome={'pass':'','fail':'<failure/>','error':'<error/>','skip':'<skipped message="unrelated reason"/>','missing':''}[state] if node==target else ''
+    cls,name=node.split('::',1)
+    cases.append(f'<testcase classname="{cls}" name="{name}">{outcome}</testcase>')
+   states[state]=invoke(cases)[1]
+  results.append({'node':target,**states})
+ capability='<testcase name="test_native_unexpected_effective_capability_is_rejected"/>'
+ print('CAPABILITY_ONLY',invoke([capability]))
+ print('MATRIX',json.dumps(results,indent=2))
+ module=runpy.run_path('tests/test_native_linux_gate.py')
+ with patch('shutil.which',return_value='/usr/bin/unshare'),patch('subprocess.run',return_value=subprocess.CompletedProcess([],1,'','Traceback: application import failed')):
+  try:module['test_native_separate_network_namespace_is_rejected'](None)
+  except pytest.skip.Exception as e:
+   print('NON_DENIAL_SKIP',str(e)); print('RUNNER_ALLOWS_NON_DENIAL',gate._allowed_skip('test_native_separate_network_namespace_is_rejected',str(e)))

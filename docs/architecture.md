@@ -2,12 +2,14 @@
 
 ## Current repository state
 
-The repository currently contains only the `butterbot.discord_app` bootstrap, environment
-configuration, a `ButterBot` subclass, and the presentation-only `/ping` cog. Its tests cover
-startup extension loading, default intents, configuration validation, and the ping response.
-There is no gameplay domain, application service, persistence implementation, or Alembic
-environment yet. The structure below is the target introduced slice by slice, not a claim
-about code that already exists.
+Slice 1.0 now provides the first Alembic baseline, async SQLAlchemy/SQLite runtime, explicit unit
+of work, schema readiness and process-lock checks, Operations transport-idempotency coordinator
+and repository, global mutation eligibility adapter, structured operational telemetry, and a
+composition root. The presentation-only `/ping` cog remains the only command. There is no `/join`,
+`/balance`, economic-value mutation, progression, inventory, banking, or safety/access behavior.
+
+The package direction below remains incremental: only the concrete boundaries needed by Slice
+1.0 exist, and later feature packages are not pre-scaffolded.
 
 ## Intended shape
 
@@ -75,6 +77,53 @@ transactions, or call Discord. Multi-step state changes never rely on compensati
 normal consistency mechanism. Durable out-of-process side effects, if introduced later, use
 an outbox record written in the same transaction.
 
+The Slice 1.0 SQLAlchemy unit of work acquires SQLite's writer lock at its application boundary,
+constructs all repositories over one async session, verifies that no transport claim remains
+unfinished, and commits once on successful exit. Exceptions roll the session back. The retry
+runner recreates the complete unit of work only for busy/locked errors, with the accepted
+25/75 ms backoff, at most two retries, and a three-second generic database budget. Its
+application-facing factory receives only attempt/budget context; the concrete SQLite factory
+alone selects the per-attempt busy timeout. Waiting for one of the four writer slots consumes the
+same remaining attempt budget; timeout is a retry-budget outcome, and SQLite's busy timeout is
+recomputed after admission from the budget actually left. The unit of work also owns synchronous post-commit
+callbacks used for commit-accurate operational events; rollback discards them. Immediately before
+commit, SQLite infrastructure revalidates both the configured pathname identity and the open
+connection's `PRAGMA database_list` identity. It confirms identity again after durable commit;
+a breach or inability to complete the required post-commit confirmation marks mutation safety
+false without changing the successful commit result. Transaction completion then runs in one shielded
+helper task so cancellation cannot interrupt commit, rollback, or resource cleanup. Cancellation
+observed before completion begins causes a confirmed rollback and is propagated. Once completion
+begins, the owner waits for a definitive commit/rollback result; a confirmed commit runs every
+post-commit callback exactly once and returns the already-produced application result, suppressing
+that cancellation so durable success is never reported as cancellation. Callback failures are
+logged and do not skip later callbacks or change the committed result. Once commit is confirmed,
+later session/connection cleanup failure is reported separately, makes runtime mutation safety
+false, and cannot rewrite the committed result. A session or connection reference is cleared only
+after its own close succeeds. Failed resources move from active-owner tracking to a runtime-owned
+unresolved set; shutdown retries that exact set and cannot dispose the engine or release process
+ownership until every retained resource is unusable.
+
+Runtime lifecycle ownership maps every active unit of work to its owning asyncio task. Shutdown
+stops admission before asynchronous cleanup begins and retains the captured owners even after a
+unit of work exits. Transaction phases distinguish active work from commit already in progress.
+At drain expiry the lifecycle requests rollback and cancels only owners whose commits have not
+begun; it awaits all captured owners without operating their sessions from another task. If an
+owner exceeds the bounded cleanup window, shutdown fails stopped with engine and process
+ownership intact. The original owner capture and any still-running monitor-close task survive a
+shutdown retry; a retry cannot replace them with a smaller capture or duplicate cleanup. Disposal
+and ownership release follow only after every captured owner and required monitor-close task
+finishes and the retained unresolved-resource set drains successfully. A failed or timed-out
+resource retry fails stopped and remains available to a later shutdown retry. Shutdown cleanup
+itself is shielded from caller cancellation. Storage-monitor
+shutdown and transaction drain begin concurrently; either component failing or exceeding its
+bound, or engine disposal failing, retains process ownership and surfaces `ShutdownIncomplete`.
+
+Operational telemetry is observational. Each sink call has its own non-throwing boundary, so a
+sink failure cannot replace replay/conflict/rejection results, retry behavior, commit/rollback, or
+cleanup semantics. Mutation-safety transitions are queued independently of current safety state
+and drained in order; a failed unsafe emission followed by recovery still emits unsafe then safe
+before normal state-change deduplication resumes.
+
 ## Feature ownership
 
 | Boundary | Owns | May expose |
@@ -136,6 +185,15 @@ expiry, storage metrics, and the retention registry. Queries create no records.
 This facility can be reused by Players, Economy, Inventory, Progression, Safety/access, and
 future domains. It never replaces their business one-use key or expected revision: the owning
 domain persists that protection independently and for the entitlement's required lifetime.
+
+The Operations table permits an outcome-less row only while its owning database transaction is
+open. The SQLAlchemy unit of work refuses to commit such a row. Successful and typed-rejection
+outcomes are canonical JSON objects with stable codes. Application persistence accepts only the
+exact JSON value model it can replay without type changes, rejects non-finite numbers, and stores a
+detached canonical form. The offline verifier and replay reject duplicate keys, non-finite decoded values, and
+non-canonical or otherwise malformed stored representations. Unexpected failures roll back the claim.
+Permanent ledger/audit rows may retain an opaque request reference but do not foreign-key their
+lifetime to the seven-day transport record.
 
 ## Cross-system contracts
 
@@ -210,17 +268,20 @@ is schema-validated, versioned, reviewed, and captured by identifier on economic
   duration, and outcome without tokens or unnecessary personal data.
 - Metrics cover use-case latency/failures, database contention/retries, idempotent replays,
   ledger reconciliation, and economic flows by reason.
-- Production startup opens an existing database without creating or migrating it, verifies
-  integrity, foreign keys, required SQLite pragmas, the exclusive process lock, and the exact
-  expected migration revision before connecting the normal command surface. Missing, behind,
+- Production startup opens an existing database without creating or migrating it and verifies
+  required SQLite pragmas, the exclusive process lock, the exact expected migration revision,
+  bounded transport state, and the indexed aggregate-completeness sentinel before connecting the
+  normal command surface. Exhaustive integrity, foreign-key, and history/canonical checks run in
+  the stopped-service streaming verifier. Missing, behind,
   ahead, unknown, or incompatible schema state exits non-zero.
 - The deployment-owned global mutation setting defaults to disabled. Until Slice 1.3 it is the
   application-level policy for all durable mutations, including `/join`; it is not a Discord
   role and creates no player restriction rows. Enabling requires schema/runtime readiness,
   backup/restore readiness, alerting, and accepted deployment-host benchmark evidence.
-- Shutdown stops new mutation work, gives in-flight transactions a bounded ten-second drain,
-  rolls back/cancels remaining sessions, closes Discord, and disposes the engine. Restart
-  repeats every readiness check and preserves WAL sidecars as database state.
+- Shutdown stops new unit-of-work admission, gives captured owners a bounded ten-second drain,
+  cancels only pre-commit owners so their own contexts roll back, and awaits commit-racing owners.
+  A stuck owner fails stopped with process ownership retained. Restart repeats every readiness
+  check and preserves WAL sidecars as database state.
 - Background jobs start in-process only if duplicate-safe and reconstructable from durable
   state. Time-critical or high-volume work requires a later durable worker decision.
 - Economic mutations can be globally disabled or restricted during an incident while safe

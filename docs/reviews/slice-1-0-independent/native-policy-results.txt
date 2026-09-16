@@ -1,0 +1,133 @@
+CAPABILITY_ONLY (0, 'passed')
+MATRIX [
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_service_identity_accepts_exact_production_storage",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_group_membership_controls_database_and_directory_access",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_sticky_root_blocks_service_database_replacement",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_symlink_and_hardlink_aliases_are_rejected",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_unexpected_effective_capability_is_rejected",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "failed"
+  },
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_abstract_socket_lock_excludes_other_identity",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_native_linux_gate.py::test_native_separate_network_namespace_is_rejected",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_process_lock_linux.py::test_linux_process_ownership_survives_lock_path_unlink_and_recreate",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_process_lock_linux.py::test_linux_process_ownership_survives_root_rename_and_recreation",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_process_lock_linux.py::test_linux_database_replacement_during_active_transaction_fails_before_commit",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_process_lock_linux.py::test_linux_approved_root_replacement_during_active_transaction_fails_before_commit",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_process_lock_linux.py::test_linux_process_ownership_requires_deployment_init_network_namespace",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_sigterm_linux.py::test_native_sigterm_drains_transactions_and_releases_process_lock[active]",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_sigterm_linux.py::test_native_sigterm_drains_transactions_and_releases_process_lock[waiting]",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_sigterm_linux.py::test_native_sigterm_drains_transactions_and_releases_process_lock[committing]",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  },
+  {
+    "node": "tests/test_sigterm_linux.py::test_native_sigterm_fail_stops_while_transaction_owner_is_unresolved",
+    "pass": "passed",
+    "fail": "failed",
+    "error": "failed",
+    "skip": "failed",
+    "missing": "passed"
+  }
+]
+NON_DENIAL_SKIP kernel/host denies creation of a test network namespace; production must keep PrivateNetwork=false and share init netns: Traceback: application import failed
+RUNNER_ALLOWS_NON_DENIAL True

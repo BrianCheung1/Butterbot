@@ -1,8 +1,8 @@
 # Butterbot
 
 Butterbot is a planned Discord economy game designed for long-lived player progression.
-It currently provides a runnable Discord bootstrap and a `/ping` health check. Gameplay has
-not been implemented.
+It currently provides a runnable Discord bootstrap, a `/ping` health check, and the Slice 1.0
+persistence/composition foundation. Gameplay has not been implemented.
 
 ## Development setup
 
@@ -20,7 +20,34 @@ Open `.env` and replace the placeholder with the token from the Discord Develope
 
 ```dotenv
 DISCORD_TOKEN=replace-with-your-token
+BUTTERBOT_DATABASE_PATH=C:\absolute\path\to\butterbot.sqlite3
+BUTTERBOT_RELEASE_ID=development
+BUTTERBOT_DATABASE_ROOT=C:\absolute\path\to
+BUTTERBOT_DATABASE_VOLUME_ID=
+BUTTERBOT_DATABASE_ADMINISTRATOR_UID=
+BUTTERBOT_DATABASE_SERVICE_GROUP_GID=
+BUTTERBOT_ECONOMY_MUTATIONS_ENABLED=false
 ```
+
+Normal startup never creates or migrates a database. Initialize or upgrade a local database as
+an explicit development/deployment action before starting the bot:
+
+```powershell
+$env:BUTTERBOT_DATABASE_PATH = "C:\absolute\path\to\butterbot.sqlite3"
+$env:BUTTERBOT_RELEASE_ID = "development"
+alembic upgrade head
+```
+
+`BUTTERBOT_DATABASE_ROOT` is the canonical approved directory containing the database directly.
+Production mutation enablement additionally requires `BUTTERBOT_DATABASE_VOLUME_ID`, set to the
+approved Linux mount `major:minor` identity from `/proc/self/mountinfo`, plus the reviewed numeric
+administrator UID and Butterbot service-group GID. Startup then requires that exact local ext4/XFS
+mount and the owner/group/mode contract in `docs/operations.md`. Development with mutations
+disabled may leave all three values empty.
+
+Keep mutations disabled unless every production-enable prerequisite in
+[`docs/operations.md`](docs/operations.md) has been satisfied. Slice 1.0 exposes no economic
+mutation command regardless of the setting.
 
 Invite the application with the `bot` and `applications.commands` scopes, then launch it
 from the repository root:
@@ -51,4 +78,6 @@ python -m butterbot.simulation
 Start with [the documentation index](docs/README.md) before making design or architecture
 decisions. The dependency-ordered implementation plan is in [ROADMAP.md](ROADMAP.md).
 The accepted initial production operating contract is in
-[docs/operations.md](docs/operations.md); no production persistence has been implemented yet.
+[docs/operations.md](docs/operations.md). The first production schema and runtime safety checks
+are implemented, but backup/restore provisioning, deployment-host evidence, and public mutations
+remain gated.

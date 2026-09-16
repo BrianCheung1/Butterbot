@@ -71,7 +71,17 @@ the host-validation procedure below before mutations are enabled on the replacem
 Production configuration uses these environment names when their runtime support is introduced:
 
 - `DISCORD_TOKEN`, supplied by the deployment secret store;
+- `BUTTERBOT_RELEASE_ID`, the immutable build/release identifier deployed by composition (for
+  example a reviewed git SHA or image digest tag), required in structured operational events;
 - `BUTTERBOT_DATABASE_PATH`, an absolute path whose production value is the path above; and
+- `BUTTERBOT_DATABASE_ROOT`, the canonical approved data root (`/var/lib/butterbot` in
+  production), containing the database directly with no symlink traversal;
+- `BUTTERBOT_DATABASE_VOLUME_ID`, the approved Linux mount `major:minor` identity from
+  `/proc/self/mountinfo`, required before mutations can be enabled;
+- `BUTTERBOT_DATABASE_ADMINISTRATOR_UID`, the reviewed numeric UID that owns the approved root
+  and main database on the selected host;
+- `BUTTERBOT_DATABASE_SERVICE_GROUP_GID`, the reviewed numeric GID shared by the Butterbot
+  service identity for SQLite write access; and
 - `BUTTERBOT_ECONOMY_MUTATIONS_ENABLED`, parsed strictly as `true` or `false` and treated as
   `false` when absent.
 
@@ -89,14 +99,16 @@ file in an existing-file/read-write mode equivalent to SQLite URI `mode=rw`, so 
 missing path cannot silently create an empty economy. Before connecting to Discord or composing
 any mutating service, startup must verify all of the following:
 
-1. the database is a regular file on the approved local persistent data volume and the process
-   holds the deployment's exclusive bot-process lock;
-2. it can connect and `PRAGMA quick_check` returns `ok`;
+1. the canonical database is a singly linked regular file directly under the canonical approved
+   root with no symlink traversal; production verifies the recorded mount identity and ext4/XFS,
+   the replacement-resistant ownership/permission rules below hold, and the process holds the
+   fixed Linux kernel-owned Butterbot ownership socket in the shared deployment network namespace;
+2. it can connect in existing-file mode and resolve the exact single expected Alembic head;
 3. `PRAGMA foreign_keys` is `1`, `journal_mode` is `wal`, `synchronous` is `2` (`FULL`), and
    `busy_timeout` is `1000` on each connection where applicable;
-4. `PRAGMA foreign_key_check` returns no rows;
-5. the database contains exactly the Alembic revision expected by the release, with one known
-   head and no unknown or multiple heads; and
+4. bounded/indexed checks find no committed incomplete transport claim, and account/player
+   completeness checks find no account without a projection or player without a wallet;
+5. schema constraints are present through the exact reviewed revision; and
 6. the mutation switch is enabled only when every production-enable prerequisite in this
    document is recorded as satisfied.
 
@@ -107,11 +119,56 @@ does not silently continue in another journal mode. SQLite's default automatic c
 cadence is retained initially, WAL/checkpoint health is observed, and tuning it requires new
 evidence.
 
+Startup intentionally does not scan retained transport outcomes or permanent ledger/posting
+history. `quick_check`, `foreign_key_check`, stored-shape checks, and canonical JSON replay checks
+are exhaustive and belong to the stopped-service verifier:
+`python -m butterbot.infrastructure.persistence.verification /var/lib/butterbot/butterbot.sqlite3`.
+Run it before deployment, after restore, during scheduled reconciliation, and whenever corruption
+is suspected. It streams history rather than materializing it with `.all()`; a non-zero exit blocks
+deployment or restart. Database constraints and application validation guard new writes between
+verifier runs.
+
 The accepted application retry contract remains at most two retries after the initial attempt,
 25/75 ms backoff, a three-second total database budget with 200 ms reserved for scheduling, and
-the original transport fingerprint and business key on every attempt. Only busy/locked errors
-are retryable. No Discord or network wait occurs inside a transaction, and at most four writer
-transactions may be in flight in the single process.
+the original transport fingerprint and business key on every attempt. Only busy/locked and
+writer-admission budget errors are retryable. Waiting for one of the four writer slots consumes
+the remaining attempt budget, and the connection busy timeout is recomputed after admission. No
+Discord or network wait occurs inside a transaction, and at most four writer transactions may be
+in flight in the single process.
+
+### Linux replacement and process-ownership boundary
+
+The final database/root identity check occurs immediately before SQLite commit, but a pathname
+check cannot by itself eliminate the remaining filesystem TOCTOU. Production therefore enforces
+all of these host invariants at startup:
+
+- the unprivileged Butterbot service identity owns neither the approved root nor the main database
+  and runs with no effective Linux capabilities;
+- the database owner UID and root owner UID equal the reviewed deployment administrator UID, and
+  both group GIDs equal the reviewed Butterbot service-group GID;
+- the database has exact mode `0660`; the approved root has exact mode `1770`, including the
+  sticky bit. This allows SQLite WAL/SHM creation without allowing the service identity or an
+  unrelated user to rename, unlink, mutate, or replace the administrator-owned main database;
+- the approved root's parent is not writable by the service identity, preventing root replacement;
+  and
+- no other process runs under the Butterbot service identity or a privileged identity capable of
+  bypassing these ownership rules during service operation.
+
+Startup fails closed if the runtime can own/replace the main database or approved root, lacks the
+write access SQLite needs, can replace the approved root through its parent, runs as root, or has
+effective capabilities. Operators provision the empty database/migration as the deployment
+administrator, then grant only the service-group access above. Any owner, group, mode, service
+identity, or effective-capability change keeps mutations disabled until readiness is revalidated.
+These Linux guarantees require the native Linux gate and are not claimed from Windows execution.
+
+The abstract Unix socket used for single-process ownership is scoped to a Linux network namespace.
+Every possible Butterbot writer for the host/database must therefore share the host service network
+namespace. `PrivateNetwork=true`, separate containers, or any topology that gives contenders
+separate network namespaces is incompatible with this SQLite deployment contract. This assumption
+must not be defeated by launching another writer in a separate namespace. Startup verifies that
+the service shares its deployment init process's network namespace, rejecting the usual systemd
+`PrivateNetwork` split; the no-separate-container rule remains a deployment-topology invariant
+because a container cannot prove that no peer container has its own namespace.
 
 ### Schema readiness outcomes
 
@@ -120,7 +177,8 @@ transactions may be in flight in the single process.
 | Database file or Alembic table missing | Log `database.schema_readiness` as failed and exit non-zero; do not auto-create |
 | Known revision behind the release | Exit non-zero; the deployment operator runs the reviewed migration explicitly while mutations are disabled |
 | Revision ahead, unknown, incompatible, or multiple heads | Exit non-zero and escalate to the application owner; never downgrade or guess |
-| Integrity, foreign-key, filesystem, lock, or required-PRAGMA check fails | Exit non-zero, record a critical readiness failure, and enter the corruption/incident procedure |
+| Startup filesystem, lock, aggregate, schema, or required-PRAGMA check fails | Exit non-zero, record a critical readiness failure, and enter the corruption/incident procedure |
+| Offline integrity, foreign-key, historical-shape, or canonical-outcome verification fails | Keep the service stopped and enter the corruption/incident procedure |
 | Exact compatible revision and all safety checks pass | The service may start; mutation composition still depends on the global switch and enable prerequisites |
 
 Schema migration is a separate deployment action, never an application-startup side effect.
@@ -156,8 +214,15 @@ Every production update has an identified release and operator record:
    latest backup is verified, storage is healthy, and an app rollback/remediation route exists.
 2. Set the global mutation switch to `false`, restart or stop the service, and confirm the
    disabled state. Stop accepting new mutations, allow up to ten seconds for in-flight use cases
-   to commit or roll back, cancel remaining tasks so sessions roll back, close Discord, and
-   dispose database connections.
+   to commit or roll back, cancel and await remaining pre-commit transaction-owner tasks so their
+   own context managers roll back/close, and await commit-racing and captured post-transaction
+   owners. Start bounded storage-monitor shutdown concurrently with this drain. If a transaction
+   owner or the required monitor shutdown fails or exceeds its bounded cleanup window, fail stopped
+   without disposing the engine or releasing process ownership. A session or connection that fails
+   to close remains referenced by the runtime; shutdown retries that unresolved set and fails
+   stopped again if it cannot prove every resource unusable. Close Discord and dispose database
+   connections only after every captured owner task, retained resource, and required monitor
+   component has finished.
 3. Produce and verify a pre-deployment backup. Preserve the previous immutable application
    release and record the current database revision.
 4. Install the new release and dependencies. If a future release includes a reviewed migration,
@@ -174,6 +239,16 @@ rolls back incomplete transactions, application idempotency returns committed ou
 same readiness checks run before work resumes. `systemd` uses `Restart=on-failure` with at least
 a five-second delay and a limit of five starts in five minutes; exhausting the limit alerts the
 deployment operator instead of looping indefinitely.
+
+The production unit uses `KillSignal=SIGTERM` and `TimeoutStopSec=30s`. Butterbot installs a native
+POSIX SIGTERM handler, closes Discord admission, then runs the same database close path used by an
+explicit runtime stop: up to 10 seconds of orderly transaction drain, up to one additional second
+for cancellation to resolve transaction ownership, up to another one second for retrying retained
+session/connection cleanup, and up to five seconds for engine disposal. Storage-monitor shutdown
+runs concurrently with the 10-second transaction drain. The database portion therefore has an
+approximately 17-second worst-case bound before process-lock release. Thirty seconds safely
+exceeds that bound and ordinary Discord/event-loop cleanup margin. `SIGKILL` before that timeout is
+not a graceful stop and must not be the normal operator path.
 
 Application rollback means selecting the prior immutable release only when it explicitly
 supports the current database revision. Alembic downgrade is not the default rollback. After a
@@ -274,7 +349,7 @@ raw Discord payloads, usernames, raw request fingerprints, and database URLs are
 | --- | --- |
 | `discord.command.completed` | command, outcome, duration; count by command/outcome |
 | `economy.mutation.completed` | use case, `applied`/`replay`/`domain_rejected`/`failed`, transaction and end-to-end duration, attempts; count and p50/p95/p99 per 60-second summary |
-| `database.busy_retry` | use case, attempt, wait and elapsed budget; lock events, retry rate, final lock failures |
+| `database.busy_retry` / `database.busy_exhausted` | use case, attempt(s), wait and elapsed budget; retry warnings and a dedicated critical final-lock event |
 | `economy.mutation.failed` | stable error category and rollback outcome; internal failures separate from expected domain rejection |
 | `operations.transport_idempotency` | namespace plus replay or fingerprint-conflict outcome; never log the raw key/fingerprint |
 | `operations.transport_idempotency_storage` | live/expired row counts, oldest expiry, cleanup deletions/failures, and cleanup duration |
@@ -301,8 +376,16 @@ The first alert contract is also small and measurable:
 
 Command/mutation counts, business-uniqueness outcomes, failed mutations, and latency are emitted
 from the owning application boundary; the shared Operations idempotency coordinator emits
-transport replay/conflict outcomes; database retry events come from the database adapter;
-invariant checks own their critical event; startup owns readiness and state; and the backup
+transport replay/conflict outcomes immediately because they describe prior committed state and
+defers applied/rejection/cleanup success until the owning commit succeeds. Database retry and
+final-exhaustion events come from retry orchestration; the SQLite adapter alone converts the
+remaining generic attempt budget into a connection busy timeout. The runtime emits storage/WAL
+samples every 60 seconds and marks mutation eligibility unsafe on any failed storage/identity
+sample. Sampling continues after probe or telemetry errors; unsafe storage events are critical,
+and mutation-state changes are queued in order until emitted successfully. All operational
+telemetry calls are non-throwing with respect to their owning business, retry, transaction, and
+cleanup outcomes.
+Invariant checks own their critical event; startup owns readiness and state; and the backup
 utility owns backup events. This ownership keeps metrics from being guessed in Discord cogs.
 
 ## Deployment-host SQLite validation
@@ -355,8 +438,55 @@ speculative infrastructure in Slice 0.4:
 - durable capabilities and one-time bootstrap tooling: Slice 1.3, before any in-bot economic
   administration.
 
+Slice 1.0 implements the in-application portion of the second item: existing-file `mode=rw`
+opening, canonical approved-root and production volume/filesystem checks, identity-independent
+exclusive process ownership, schema/integrity/foreign-key/PRAGMA readiness, strict
+disabled-by-default global mutation eligibility, periodic structured startup/idempotency/
+storage/retry events, application-owned sessions, and a bounded ten-second transaction drain.
+After its deadline, pre-commit owners are cancelled and all captured owners are awaited; a stuck
+or commit-in-progress owner, or a stuck/failed storage monitor, causes fail-stop with engine and
+ownership retained. A retry retains the original owner capture, any still-running monitor-close
+task, and every session/connection whose close has not succeeded instead of replacing them with
+smaller or duplicate cleanup. The monitor stop and owner drain start concurrently so neither can
+prevent the other from executing. Engine-disposal failure also retains process ownership. The bot
+is composed only after readiness passes. No mutation command exists yet.
+
+Backup automation, an application reconciliation verifier, host/log/alert provisioning, a
+recorded restore drill, and deployment-host benchmark evidence remain deployment/public-enable
+prerequisites; Slice 1.0 does not claim they exist. The global setting must remain false unless
+those external checklist items are recorded as satisfied.
+
 The first production-enable checklist is therefore measurable: named owners and alternate;
 one approved host/process; persistent local storage checks; exact schema/runtime readiness;
 mutation switch proven fail-closed; a verified backup newer than 30 minutes; a successful restore
 drill meeting the 15-minute RPO/two-hour RTO; alert delivery test; and accepted deployment-host
 benchmark evidence. Any unchecked item keeps mutations disabled.
+
+
+## September 2026 gate remediation
+
+Release head is `20260914_0003`; `20260825_0001` remains the frozen historical
+baseline. Upgrade explicitly with mutations stopped. The new revision prevents changes
+to player UUID/Discord identity, account UUID/owner/kind/currency/system identity, and
+projection account UUID/kind. No-op identity assignments remain legal.
+
+Readiness and the stopped-service verifier compare all application tables, explicit
+indexes, and triggers against a release-bound, case-sensitive schema manifest, including
+ledger/transport constraints and retention indexes. Work is bounded by schema object
+count. Implicit uniqueness indexes are covered by owning table SQL. Unexpected application
+schema objects also fail closed.
+
+Native Linux evidence must come from the exact reviewed candidate on the provisioned
+Linux host. Capability coverage must be collected and pass using real nonzero effective
+capabilities. Failure, skip, or absence fails the runner. Only the exact network-namespace
+test may skip for documented host denial of namespace creation; missing unshare is not
+an allowed skip. Existing UID/GID/mode, mounts, abstract socket, sticky replacement,
+links, namespaces, and active/waiting/committing/fail-stop SIGTERM tests remain required.
+
+Revision `20260914_0003` also rejects aggregate replacement collisions and records hidden
+completeness violations left by older versions. Upgrade only while stopped. Existing incomplete
+state is not repaired automatically and will fail readiness. Preserve the native runner's
+sibling artifacts directory together with its JSON report; the report binds source hashes,
+selected tests, outcomes and host information. An acceptance report requires all mandatory
+cases, and only a proven pre-child EPERM/EACCES namespace denial may skip. Native evidence for
+this new candidate remains outstanding; local Windows results do not authorize Slice 1.1.

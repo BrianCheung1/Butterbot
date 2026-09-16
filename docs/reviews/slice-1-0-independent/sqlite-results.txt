@@ -1,0 +1,15 @@
+OBJECT_COUNTS {'table': 8, 'index': 3, 'trigger': 11} manifest 22
+NINE_IDENTITY_FIELDS_NOOPS_MULTIROW_SAVEPOINT_ROLLBACK_OK
+IDENTITY_CHECKS ['accepted', 'accepted']
+ALL_OBJECT_DRIFT_REJECTED_BOTH 22
+CONSTRAINT_check ['DatabaseReadinessError:integrity_schema_contract', 'DatabaseReadinessError:integrity_schema_contract']
+CONSTRAINT_unique ['DatabaseReadinessError:integrity_schema_contract', 'DatabaseReadinessError:integrity_schema_contract']
+CONSTRAINT_fk ['DatabaseReadinessError:integrity_schema_contract', 'DatabaseReadinessError:integrity_schema_contract']
+EXTRA ['DatabaseReadinessError:integrity_schema_contract', 'DatabaseReadinessError:integrity_schema_contract']
+WILDCARD ['accepted', 'accepted']
+WHITESPACE ['accepted', 'accepted']
+REPLACE_STATE {'foreign_keys': 1, 'recursive_triggers': 0, 'wallet_owner': '00000000000000000000000000000002', 'sentinels': [], 'fk_violations': []}
+REPLACE_CHECKS ['accepted', 'HistoricalVerificationError:invalid_persisted_state']
+No new upgrade operations detected.
+CYCLE_CHECKS ['accepted', 'accepted']
+SQLITE_VERSION 3.50.4

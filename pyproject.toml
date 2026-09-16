@@ -33,6 +33,9 @@ addopts = "--strict-config --strict-markers"
 asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "native_linux_kernel: genuine Linux kernel/filesystem production-contract coverage",
+]
 
 [tool.ruff]
 line-length = 100

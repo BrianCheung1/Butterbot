@@ -11,6 +11,66 @@ Reference gameplay remains non-production until its integration gate passes. A p
 command does not require a complete years-long content catalog, but repeatable rewards require
 an approved numerical envelope, abuse controls, a scalable recurring sink, and load evidence.
 
+## Global slice gate policy
+
+`ROADMAP.md` defines implementation order, dependencies, scope, and slice-specific acceptance
+criteria. Repository-wide engineering, Definition-of-Done, testing, and independent-review
+requirements are defined by `AGENTS.md` and `docs/testing.md`.
+
+Every implementation slice follows this lifecycle:
+
+1. Implement only the authorized slice.
+2. Satisfy the slice-specific requirements and acceptance criteria in this roadmap.
+3. Satisfy the Definition of Done in `AGENTS.md`.
+4. Run the mandatory verification commands in `docs/testing.md`.
+5. Submit the resulting repository state to an independent gate review.
+6. The reviewer performs both:
+   - regression verification of previously reported findings; and
+   - a fresh adversarial review for previously unknown defects.
+7. The review ends with exactly one decision:
+   - `SLICE X.Y: PASS`; or
+   - `SLICE X.Y: FAIL`.
+8. A failed slice returns to remediation and must be independently reviewed again.
+9. The next dependent slice may begin only after the current slice receives `PASS`.
+
+Implementation completion is not gate acceptance. Passing existing tests is evidence, not proof
+that a slice is safe to depend on. A review must not be limited to known findings, existing tests,
+the builder's summary, or only the files changed by the latest remediation.
+
+The authoritative review, severity, concurrency, failure-injection, platform-verification, and
+PASS/FAIL contract is `docs/testing.md`.
+
+### Finding disposition
+
+- An open Blocking finding prevents progression.
+- A High finding required by the next dependent slice must be resolved unless an explicit
+  reviewed roadmap/decision record establishes why deferral is safe and names its later gate.
+- A Medium finding may be deferred only when it cannot invalidate the current or next dependent
+  slice and the deferral is explicit.
+- Low findings normally do not block progression unless they expose a larger systemic problem.
+
+### Status vocabulary
+
+Use these labels when a slice needs an explicit current state:
+
+- `PASS` — independently accepted; dependent work may proceed.
+- `IN REVIEW` — implementation is complete enough for independent gate review.
+- `REMEDIATION` — a gate failed and findings are being corrected.
+- `IN PROGRESS` — implementation is underway.
+- `BLOCKED` — a dependency or required gate has not passed.
+- `NOT STARTED` — no authorized implementation has begun.
+
+### Public-enable distinction
+
+A slice receiving `PASS` authorizes only the next development work allowed by this roadmap. It
+does not by itself authorize public durable economy mutations.
+
+Deployment-host validation, backups, restore drills, alert paths, runtime configuration,
+production SQLite validation, and other public-enable requirements remain governed by
+`docs/operations.md`, `docs/database.md`, `docs/sqlite-capacity.md`, and their named roadmap
+gates. Development or CI evidence must never be represented as satisfying a deployment-host
+requirement that was not actually executed there.
+
 ## Phase 0 — First-schema readiness
 
 No production economy migration is created before Slices 0.1–0.4 and the Phase 0 gate review
@@ -72,8 +132,9 @@ do not weaken the accepted peak, durability, retry, or latency gate.
 
 ### Final Phase 0 gate review
 
-**Pending explicit review:** Slice 0.4 completion makes the repository ready for this review; it
-does not itself declare Phase 0 complete or authorize a migration.
+**Accepted before Slice 1.0:** the explicit Final Phase 0 Gate Review passed and authorized the
+first production economy migration. The selected deployment-host rerun remains a separate
+pre-public-mutation prerequisite.
 
 Phase 0 is complete only when the accepted ADRs, numerical envelope, development-host SQLite
 result, and operations/deployment contract are reviewed together and the reviewer explicitly
@@ -85,6 +146,9 @@ separate pre-public-mutation prerequisite because the host does not yet exist.
 ## Phase 1 — Identity, private balance, and trustworthy money
 
 ### Slice 1.0: Persistence and composition foundation — depends on the Phase 0 gate, Spine
+
+**Status: IN REVIEW — current failed-gate remediation is locally implemented; native Linux
+verification and a repeat independent gate are required.**
 
 Create the deliberately designed minimal Alembic baseline, async engine/unit of work,
 schema-readiness check, database lifecycle, global mutation eligibility adapter, and initial
@@ -98,6 +162,8 @@ constraints, rollback, concurrent account creation support, portable types, fail
 and graceful disposal. No command creates economic value.
 
 ### Slice 1.1: Explicit `/join` — depends on 1.0, Spine
+
+**Status: BLOCKED — requires `SLICE 1.0: PASS`.**
 
 A Discord user explicitly creates or retrieves one global player and wallet. The interaction
 ID protects transport replay; unique Discord-player and player-wallet constraints protect the
@@ -391,9 +457,32 @@ Do not parallelize work that is still defining account semantics, business uniqu
 availability, action-fact delivery, reward authority, modifier order, restriction scope, or
 Alembic head order.
 
-## Quality gate for every implementation slice
+## Gate for every implementation slice
 
-Run `ruff check .`, `ruff format --check .`, strict `pyright`, and `pytest`. Add pure rule tests,
-real-SQLite service tests, migration-path tests, Discord adapter tests, and concurrent tests
-using both repeated and distinct transport IDs. Update design, balance evidence, and decisions
-with the same change.
+Every implementation slice must satisfy `AGENTS.md` and the authoritative testing/review
+contract in `docs/testing.md` before a dependent slice begins.
+
+Mandatory local verification is:
+
+```text
+ruff format --check .
+ruff check .
+pyright
+pytest -p no:cacheprovider
+git diff --check
+```
+
+Tests and reviews must be selected for the actual slice rather than mechanically copied from
+earlier work. Where relevant, include pure rule tests, real-SQLite application/integration tests,
+migration-path and direct-constraint tests, Discord adapter tests, concurrency and competing-state
+tests, transport replay tests, distinct transport IDs targeting the same business fact,
+failure-injection tests, and regression tests for reproduced defects.
+
+After implementation verification, an independent reviewer must perform both regression
+verification and a fresh adversarial review under `docs/testing.md` and return
+`SLICE X.Y: PASS` or `SLICE X.Y: FAIL`.
+
+Do not advance on implementation completion alone. Update the relevant architecture, database,
+operations, testing, balance evidence, or decision documents in the same change whenever a
+durable contract actually changes; do not create documentation churn for behavior that does not
+change a durable contract.

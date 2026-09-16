@@ -1,0 +1,43 @@
+import asyncio, json, sqlite3, tempfile
+from contextlib import closing
+from pathlib import Path
+from unittest.mock import patch
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import MetaData
+from butterbot.infrastructure.persistence import schema_contract,models,release_manifest
+from butterbot.infrastructure.persistence.database import create_database_runtime
+
+def cfg(p):
+ c=Config('alembic.ini');c.set_main_option('sqlalchemy.url','sqlite:///'+p.as_posix());return c
+
+def ddl(p):
+ with closing(sqlite3.connect(p)) as db:return list(db.execute('SELECT type,name,tbl_name,sql FROM sqlite_master ORDER BY type,name'))
+
+async def main():
+ with tempfile.TemporaryDirectory() as d:
+  a=Path(d)/'a.db';b=Path(d)/'b.db';command.upgrade(cfg(a),'20260825_0001')
+  with patch.object(schema_contract,'SQLITE_AGGREGATE_TRIGGER_SQL',{'bad':'INVALID'}),patch.object(schema_contract,'INTEGRITY_SENTINEL_INDEX','bad'),patch.object(models.Base,'metadata',MetaData()),patch.object(release_manifest,'RELEASE_SCHEMA_SHA256',{}):command.upgrade(cfg(b),'20260825_0001')
+  assert ddl(a)==ddl(b);print('BASELINE_IDENTICAL_WITH_RUNTIME_METADATA_AND_CONTRACT_POISONED')
+  with closing(sqlite3.connect(b)) as db:
+   for n in (1,2):db.execute("INSERT INTO players VALUES (?, ?, 1, 'active')",(f'{n:032x}',n))
+   db.execute("INSERT INTO economy_accounts VALUES (?, ?, 'wallet', 'coin', NULL, 1)",(f'{11:032x}',f'{1:032x}'));db.execute("INSERT INTO economy_account_balances VALUES (?, 'wallet', 25, 0)",(f'{11:032x}',))
+   db.execute('UPDATE economy_accounts SET player_id=?',(f'{2:032x}',));db.execute('DELETE FROM operations_integrity_violations');db.commit()
+   before=db.execute('SELECT * FROM economy_account_balances').fetchall()
+   db.execute('CREATE TRIGGER trg_players_immutable_identity BEFORE UPDATE ON players BEGIN SELECT 1; END');db.commit()
+  try:command.upgrade(cfg(b),'head')
+  except Exception as e:print('INJECTED_UPGRADE_FAILURE',type(e).__name__)
+  else:raise AssertionError('expected duplicate trigger failure')
+  with closing(sqlite3.connect(b)) as db:
+   assert db.execute('SELECT version_num FROM alembic_version').fetchone()==('20260825_0001',)
+   assert db.execute('SELECT * FROM operations_integrity_violations').fetchall()==[]
+   db.execute('DROP TRIGGER trg_players_immutable_identity');db.commit()
+  command.upgrade(cfg(b),'head')
+  with closing(sqlite3.connect(b)) as db:
+   assert db.execute('SELECT * FROM economy_account_balances').fetchall()==before
+   print('UPGRADE_HOLE_SENTINELS',db.execute('SELECT * FROM operations_integrity_violations').fetchall())
+  try:await create_database_runtime(b)
+  except Exception as e:print('UPGRADED_HOLE_REJECTED',type(e).__name__,getattr(e,'category',None))
+  else:raise AssertionError('hole accepted')
+  print('MIGRATION_FAILURE_ROLLBACK_RETRY_AND_NO_MONEY_SYNTHESIS_OK')
+asyncio.run(main())

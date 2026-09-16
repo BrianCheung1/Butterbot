@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ from benchmarks.sqlite_capacity import (
     TWICE_PROJECTED_PEAK_TPS,
     RetryPolicy,
     capacity_assessment,
+    capacity_gate_failures,
     implementation_sha256,
     initialize_database,
     open_connection,
@@ -31,7 +33,7 @@ from benchmarks.sqlite_capacity import (
 )
 
 REPOSITORY_ROOT = Path(__file__).parents[1]
-EVIDENCE_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "sqlite-capacity-2026-08-25.json"
+EVIDENCE_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "sqlite-capacity-2026-08-31.json"
 
 
 def test_percentile_interpolates() -> None:
@@ -213,3 +215,57 @@ def test_checked_sqlite_evidence_matches_current_benchmark_contract() -> None:
     assert assessment["twice_projected_peak_tps"] == TWICE_PROJECTED_PEAK_TPS
     assert assessment["offered_tps"] == TWICE_PROJECTED_PEAK_TPS
     assert all(result["passed"] for result in evidence["diagnostics"].values())
+    assert capacity_gate_failures(evidence, require_accepted_configuration=True) == []
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        ("repeat", "repeat 1 failed"),
+        ("gate", "twice-peak"),
+        ("seed", "seed_accounts"),
+        ("saturation", "saturation_concurrency"),
+        ("backlog", "retained backlog"),
+        ("completion", "completion target"),
+        ("diagnostic", "correctness diagnostic"),
+    ],
+)
+def test_checked_evidence_guard_rejects_every_acceptance_dimension(
+    mutation: str, expected: str
+) -> None:
+    evidence = json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))
+    changed = deepcopy(evidence)
+    if mutation == "repeat":
+        changed["open_loop_runs"][0]["acceptance_passed"] = False
+    elif mutation == "gate":
+        changed["capacity_assessment"]["twice_peak_capacity_gate_passed"] = False
+    elif mutation == "seed":
+        changed["configuration"]["seed_accounts"] += 1
+    elif mutation == "saturation":
+        changed["configuration"]["saturation_concurrency"] = [1]
+    elif mutation == "backlog":
+        changed["open_loop_runs"][0]["backlog_at_window_end"] = 1
+    elif mutation == "completion":
+        changed["open_loop_runs"][0]["completion_within_window_percent"] = 98.9
+    else:
+        changed["diagnostics"]["rollback"]["passed"] = False
+
+    assert expected in " | ".join(
+        capacity_gate_failures(changed, require_accepted_configuration=True)
+    )
+
+
+def test_benchmark_cli_returns_nonzero_when_capacity_gate_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from benchmarks import sqlite_capacity
+
+    evidence = json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))
+    evidence["capacity_assessment"]["twice_peak_capacity_gate_passed"] = False
+
+    async def failed_experiment(*args: object, **kwargs: object) -> dict[str, object]:
+        del args, kwargs
+        return evidence
+
+    monkeypatch.setattr(sqlite_capacity, "run_experiment", failed_experiment)
+    assert sqlite_capacity.main([]) == 1

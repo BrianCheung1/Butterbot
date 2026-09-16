@@ -23,7 +23,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, cast
 from uuid import NAMESPACE_URL, uuid5
 
 import aiosqlite
@@ -1345,6 +1345,90 @@ def capacity_assessment(
     }
 
 
+def capacity_gate_failures(
+    evidence: dict[str, Any], *, require_accepted_configuration: bool = False
+) -> list[str]:
+    """Return every reason an experiment cannot be accepted as capacity evidence."""
+    failures: list[str] = []
+    runs_value = evidence.get("open_loop_runs")
+    runs = cast("list[dict[str, Any]]", runs_value) if isinstance(runs_value, list) else None
+    if not isinstance(runs, list) or not runs:
+        failures.append("open-loop repeats are missing")
+    else:
+        for index, run in enumerate(runs, start=1):
+            if not bool(run.get("acceptance_passed")):
+                failures.append(f"open-loop repeat {index} failed acceptance")
+                continue
+            if float(run.get("completion_within_window_percent", 0)) < 99:
+                failures.append(f"open-loop repeat {index} missed completion target")
+            if int(run.get("backlog_at_window_end", -1)) != 0:
+                failures.append(f"open-loop repeat {index} retained backlog")
+            if int(run.get("final_lock_failures", -1)) != 0:
+                failures.append(f"open-loop repeat {index} had final lock failures")
+            if run.get("invariant_failures") != []:
+                failures.append(f"open-loop repeat {index} had invariant failures")
+    assessment_value = evidence.get("capacity_assessment")
+    assessment = (
+        cast("dict[str, Any]", assessment_value) if isinstance(assessment_value, dict) else None
+    )
+    if assessment is None or not bool(assessment.get("twice_peak_capacity_gate_passed")):
+        failures.append("twice-peak capacity gate is false")
+    diagnostics_value = evidence.get("diagnostics")
+    diagnostics = (
+        cast("dict[str, dict[str, Any]]", diagnostics_value)
+        if isinstance(diagnostics_value, dict)
+        else None
+    )
+    if not diagnostics:
+        failures.append("correctness diagnostics are missing")
+    else:
+        for name, diagnostic in diagnostics.items():
+            if not bool(diagnostic.get("passed")):
+                failures.append(f"correctness diagnostic {name} failed")
+    if require_accepted_configuration:
+        configuration_value = evidence.get("configuration")
+        configuration = (
+            cast("dict[str, Any]", configuration_value)
+            if isinstance(configuration_value, dict)
+            else None
+        )
+        expected = {
+            "foreign_keys": "ON",
+            "journal_mode": "WAL",
+            "synchronous": "FULL",
+            "busy_timeout_ms": BUSY_TIMEOUT_MS,
+            "max_retries_after_initial": MAX_RETRIES,
+            "retry_budget_ms": RETRY_BUDGET_MS,
+            "retry_backoff_ms": list(RETRY_BACKOFF_MS),
+            "retry_deadline_guard_ms": RETRY_DEADLINE_GUARD_MS,
+            "projected_peak_tps": PROJECTED_PEAK_TPS,
+            "twice_projected_peak_tps": TWICE_PROJECTED_PEAK_TPS,
+            "offered_tps": TWICE_PROJECTED_PEAK_TPS,
+            "warmup_seconds": DEFAULT_WARMUP_SECONDS,
+            "measurement_seconds": DEFAULT_MEASUREMENT_SECONDS,
+            "repeats": DEFAULT_REPEATS,
+            "workers": DEFAULT_WORKERS,
+            "seed_accounts": DEFAULT_SEED_ACCOUNTS,
+            "initial_wallet_balance": INITIAL_WALLET_BALANCE,
+            "workload_mix": (
+                "20% unique join, 40% credit, 40% sufficient-funds and revision-guarded debit"
+            ),
+            "saturation_concurrency": list(DEFAULT_SATURATION_CONCURRENCY),
+            "saturation_operations_per_level": DEFAULT_SATURATION_OPERATIONS,
+        }
+        if configuration is None:
+            failures.append("accepted configuration is missing")
+        else:
+            for name, expected_value in expected.items():
+                if configuration.get(name) != expected_value:
+                    failures.append(f"accepted configuration differs for {name}")
+            if set(configuration) != set(expected):
+                failures.append("accepted configuration field set differs")
+        if not isinstance(runs, list) or len(runs) != DEFAULT_REPEATS:
+            failures.append("accepted repeat count differs")
+    return failures
+
+
 async def run_experiment(
     saturation_concurrency: Sequence[int] = DEFAULT_SATURATION_CONCURRENCY,
     saturation_operations: int = DEFAULT_SATURATION_OPERATIONS,
@@ -1514,7 +1598,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.output.write_text(rendered, encoding="utf-8")
     else:
         print(rendered, end="")
-    return 0
+    return 1 if capacity_gate_failures(result) else 0
 
 
 if __name__ == "__main__":

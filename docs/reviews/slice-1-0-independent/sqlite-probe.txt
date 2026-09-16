@@ -1,0 +1,100 @@
+import asyncio, hashlib, json, sqlite3, tempfile
+from contextlib import closing
+from pathlib import Path
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import text
+from butterbot.infrastructure.persistence.database import create_database_runtime
+from butterbot.infrastructure.persistence.verification import _verify_database
+from butterbot.infrastructure.persistence import schema_contract
+from butterbot.infrastructure.persistence.release_manifest import RELEASE_SCHEMA_SHA256
+from butterbot.infrastructure.persistence.readiness import DatabaseReadinessError
+
+def config(p):
+ c=Config('alembic.ini'); c.set_main_option('sqlalchemy.url','sqlite:///'+p.as_posix()); return c
+
+def seed(db):
+ db.execute('PRAGMA foreign_keys=ON')
+ for n in (1,2):
+  db.execute("INSERT INTO players VALUES (?, ?, 1, 'active')",(f'{n:032x}',n))
+  db.execute("INSERT INTO economy_accounts VALUES (?, ?, 'wallet', 'coin', NULL, 1)",(f'{n+10:032x}',f'{n:032x}'))
+  db.execute("INSERT INTO economy_account_balances VALUES (?, 'wallet', 25, 0)",(f'{n+10:032x}',))
+ db.commit()
+
+async def checks(p):
+ result=[]
+ for check in (create_database_runtime,_verify_database):
+  try:
+   r=await check(p)
+   if hasattr(r,'close'):await r.close()
+   result.append('accepted')
+  except Exception as e:result.append(type(e).__name__+':'+getattr(e,'category',str(e)))
+ return result
+
+async def main():
+ with tempfile.TemporaryDirectory() as d:
+  root=Path(d); base=root/'base.db'; command.upgrade(config(base),'head')
+  with closing(sqlite3.connect(base)) as db:
+   actual=list(db.execute("SELECT type,name,tbl_name,sql FROM sqlite_master WHERE sql IS NOT NULL"))
+   print('OBJECT_COUNTS', {kind:sum(x[0]==kind for x in actual) for kind in ('table','index','trigger')}, 'manifest',len(RELEASE_SCHEMA_SHA256))
+   db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+  def copy(name):
+   p=root/(name+'.db')
+   with closing(sqlite3.connect(base)) as src,closing(sqlite3.connect(p)) as dst:src.backup(dst)
+   return p
+  p=copy('identity')
+  protected={'players':{'id':"'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",'discord_user_id':'discord_user_id+100'},'economy_accounts':{'id':"'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",'player_id':"'00000000000000000000000000000002'",'account_kind':"'issuance'",'currency_key':"'other'",'system_key':"'system.test'"},'economy_account_balances':{'account_id':"'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",'account_kind':"'issuance'"}}
+  with closing(sqlite3.connect(p)) as db:
+   seed(db)
+   for table,columns in protected.items():
+    db.execute('UPDATE '+table+' SET '+','.join(c+'='+c for c in columns)); db.commit()
+    for col,value in columns.items():
+     db.execute('BEGIN'); db.execute('UPDATE economy_account_balances SET version=1'); db.execute('SAVEPOINT review')
+     try:db.execute(f'UPDATE {table} SET {col}={value}')
+     except sqlite3.IntegrityError as e:assert 'immutable' in str(e)
+     else:raise AssertionError((table,col))
+     db.execute('ROLLBACK TO review'); assert db.execute('SELECT sum(version) FROM economy_account_balances').fetchone()==(2,)
+     db.execute('RELEASE review'); db.rollback()
+     assert db.execute('SELECT sum(version) FROM economy_account_balances').fetchone()==(0,)
+   print('NINE_IDENTITY_FIELDS_NOOPS_MULTIROW_SAVEPOINT_ROLLBACK_OK')
+  print('IDENTITY_CHECKS',await checks(p))
+  drift=[]
+  for kind,name,table,sql in actual:
+   p=copy('drift_'+name)
+   with closing(sqlite3.connect(p)) as db:
+    if kind in ('trigger','index'):db.execute(f'DROP {kind} "{name}"')
+    else:
+     db.execute('PRAGMA writable_schema=ON'); db.execute('UPDATE sqlite_master SET sql=? WHERE name=?',(sql.replace('CREATE TABLE','create table'),name));db.execute('PRAGMA schema_version=999')
+    db.commit()
+   observed=await checks(p);assert all('integrity_schema_contract' in x for x in observed),(name,observed);drift.append(name)
+  print('ALL_OBJECT_DRIFT_REJECTED_BOTH',len(drift))
+  for label,mutation in [('check',lambda s:s.replace('amount != 0','1')),('unique',lambda s:s.replace('UNIQUE (correlation_id)','UNIQUE (correlation_id, id)')),('fk',lambda s:s.replace('REFERENCES economy_accounts (id)','REFERENCES players (id)'))]:
+   table='economy_ledger_transactions' if label=='unique' else 'economy_ledger_postings';p=copy(label)
+   with closing(sqlite3.connect(p)) as db:
+    sql=db.execute('SELECT sql FROM sqlite_master WHERE name=?',(table,)).fetchone()[0];changed=mutation(sql);assert changed!=sql
+    db.execute('PRAGMA writable_schema=ON');db.execute('UPDATE sqlite_master SET sql=? WHERE name=?',(changed,table));db.execute('PRAGMA schema_version=999');db.commit()
+   print('CONSTRAINT_'+label,await checks(p))
+  for label,ddl in [('extra',"CREATE TABLE review_extra (id INTEGER)"),('wildcard',"CREATE TRIGGER sqliteXuncontracted BEFORE INSERT ON players BEGIN SELECT RAISE(ABORT, 'uncontracted behavior'); END")]:
+   p=copy(label)
+   with closing(sqlite3.connect(p)) as db:db.execute(ddl);db.commit()
+   print(label.upper(),await checks(p))
+  p=copy('whitespace')
+  with closing(sqlite3.connect(p)) as db:
+   db.execute('PRAGMA writable_schema=ON');db.execute("UPDATE sqlite_master SET sql=replace(sql, 'CREATE TABLE', 'CREATE   TABLE') WHERE name='players'");db.execute('PRAGMA schema_version=999');db.commit()
+  print('WHITESPACE',await checks(p))
+  p=copy('replace')
+  with closing(sqlite3.connect(p)) as db:
+   db.execute('PRAGMA foreign_keys=ON')
+   for n in (1,2):db.execute("INSERT INTO players VALUES (?, ?, 1, 'active')",(f'{n:032x}',n))
+   db.execute("INSERT INTO economy_accounts VALUES (?, ?, 'wallet', 'coin', NULL, 1)",(f'{11:032x}',f'{1:032x}'))
+   db.execute("INSERT INTO economy_account_balances VALUES (?, 'wallet', 25, 0)",(f'{11:032x}',));db.commit()
+   db.execute("INSERT INTO economy_accounts VALUES (?, ?, 'wallet', 'coin', NULL, 1)",(f'{12:032x}',f'{2:032x}'));db.execute("INSERT INTO economy_account_balances VALUES (?, 'wallet', 0, 0)",(f'{12:032x}',));db.commit()
+   assert db.execute('SELECT * FROM operations_integrity_violations').fetchall()==[]
+   db.execute('BEGIN');db.execute('DELETE FROM economy_account_balances');db.execute('DELETE FROM economy_accounts WHERE id=?',(f'{12:032x}',))
+   db.execute("INSERT OR REPLACE INTO economy_accounts VALUES (?, ?, 'wallet', 'coin', NULL, 1)",(f'{11:032x}',f'{2:032x}'))
+   db.execute("INSERT INTO economy_account_balances VALUES (?, 'wallet', 25, 0)",(f'{11:032x}',));db.execute('DELETE FROM operations_integrity_violations');db.commit()
+   print('REPLACE_STATE',{'foreign_keys':db.execute('PRAGMA foreign_keys').fetchone()[0],'recursive_triggers':db.execute('PRAGMA recursive_triggers').fetchone()[0],'wallet_owner':db.execute('SELECT player_id FROM economy_accounts').fetchone()[0],'sentinels':db.execute('SELECT * FROM operations_integrity_violations').fetchall(),'fk_violations':db.execute('PRAGMA foreign_key_check').fetchall()})
+  print('REPLACE_CHECKS',await checks(p))
+  command.check(config(base));command.downgrade(config(base),'20260825_0001');command.upgrade(config(base),'head');print('CYCLE_CHECKS',await checks(base))
+  print('SQLITE_VERSION',sqlite3.sqlite_version)
+asyncio.run(main())

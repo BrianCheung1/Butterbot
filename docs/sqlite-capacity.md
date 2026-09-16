@@ -55,7 +55,7 @@ From the repository root with the development environment installed:
   --repeats 3 `
   --workers 4 `
   --storage-description "Local C: temporary-directory storage on the development host; deployment host and physical media are not yet selected." `
-  --output docs/evidence/sqlite-capacity-2026-08-25.json
+  --output docs/evidence/sqlite-capacity-2026-08-31.json
 ```
 
 The gate is open-loop: arrivals are scheduled independently of completion at 34 TPS. Queue delay
@@ -89,7 +89,7 @@ host and physical media are not selected. The result is therefore valid for the 
 architecture decision and must be repeated on the selected deployment host before public
 economic mutations.
 
-Raw evidence: [`evidence/sqlite-capacity-2026-08-25.json`](evidence/sqlite-capacity-2026-08-25.json).
+Raw evidence: [`evidence/sqlite-capacity-2026-08-31.json`](evidence/sqlite-capacity-2026-08-31.json).
 The JSON is canonical; the summary tables below are transcriptions of its checked values. This
 documentation-only synchronization does not regenerate evidence or reset its freshness contract.
 
@@ -100,9 +100,9 @@ drain beyond scheduler granularity, no retry, no final lock failure, and no inva
 
 | Repeat | Offered TPS | Completed-in-window TPS | p95 | p99 | Max | Service p99 | Queue-delay p99 | Lock-held p99 | Result |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 34.0 | 34.0 | 17.432 ms | 18.356 ms | 21.275 ms | 6.816 ms | 15.636 ms | 6.260 ms | pass |
-| 2 | 34.0 | 34.0 | 17.601 ms | 18.595 ms | 21.711 ms | 6.249 ms | 15.700 ms | 5.790 ms | pass |
-| 3 | 34.0 | 34.0 | 17.492 ms | 18.238 ms | 24.183 ms | 6.388 ms | 15.551 ms | 6.006 ms | pass |
+| 1 | 34.0 | 34.0 | 17.494 ms | 19.316 ms | 37.209 ms | 7.201 ms | 15.687 ms | 6.573 ms | pass |
+| 2 | 34.0 | 34.0 | 17.488 ms | 18.344 ms | 22.539 ms | 6.343 ms | 15.829 ms | 5.892 ms | pass |
+| 3 | 34.0 | 34.0 | 17.671 ms | 18.570 ms | 21.776 ms | 6.172 ms | 15.834 ms | 5.710 ms | pass |
 
 The acceptance criteria remain p95 at most 100 ms, p99 at most 250 ms, fewer than 1% of
 operations requiring a busy retry, no final lock failure, no invariant/idempotency failure, and
@@ -114,11 +114,11 @@ at least 99% completion inside each measurement window. Every repeat passed.
   one `created` result, and fifteen existing/domain-replay results.
 - An injected failure after request, ledger, and projection writes but before postings rolled
   back every write and restored the starting wallet.
-- A reader completed in 0.292 ms during an uncommitted writer and observed the prior committed
+- A reader completed in 0.184 ms during an uncommitted writer and observed the prior committed
   value, confirming WAL reader/writer behavior.
-- The configured 1,000 ms busy timeout raised `database is locked` after 1,163.248 ms.
-- A transient lock recovered on attempt two in 1,459.621 ms; a persistent lock stopped after
-  three attempts in 2,914.607 ms, both within the three-second policy budget.
+- The configured 1,000 ms busy timeout raised `database is locked` after 1,157.716 ms.
+- A transient lock recovered on attempt two in 1,466.306 ms; a persistent lock stopped after
+  three attempts in 2,912.239 ms, both within the three-second policy budget.
 - Sixteen guarded debits competing for a five-coin wallet applied exactly five, rejected eleven,
   ended at zero, wrote five ledger transactions, and retired five coins.
 - Same-key/same-fingerprint replay returned the prior result; same-key/different-fingerprint was
@@ -131,14 +131,14 @@ provisional operational warning thresholds. It is not the twice-peak acceptance 
 
 | Writers | Completed TPS | p95 | p99 | Retry rate | Final locks | Result |
 | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 588.784 | 2.051 ms | 3.755 ms | 0.000% | 0 | pass |
-| 4 | 499.505 | 2.524 ms | 171.927 ms | 0.000% | 0 | pass |
-| 8 | 390.104 | 2.605 ms | 656.098 ms | 0.500% | 0 | fail: p99 |
-| 16 | 326.932 | 3.888 ms | 1,639.439 ms | 1.500% | 0 | fail: p99 and retry rate |
+| 1 | 493.079 | 2.976 ms | 7.064 ms | 0.000% | 0 | pass |
+| 4 | 499.925 | 2.517 ms | 102.154 ms | 0.000% | 0 | pass |
+| 8 | 447.918 | 6.143 ms | 757.592 ms | 0.125% | 0 | fail: p99 |
+| 16 | 388.427 | 2.653 ms | 1,470.288 ms | 1.625% | 0 | fail: p99 and retry rate |
 
 For this candidate workload on this host, keep one process and at most four in-flight writer
-transactions. The provisional PostgreSQL-start planning rate is 249.75 TPS (50% of the passing
-four-writer diagnostic), and the provisional migration-completion rate is 349.65 TPS (70%). The
+transactions. The provisional PostgreSQL-start planning rate is 249.96 TPS (50% of the passing
+four-writer diagnostic), and the provisional migration-completion rate is 349.95 TPS (70%). The
 accepted 17 TPS projected peak is 6.8% of the start threshold, and the repeated 34 TPS gate passed.
 
 The Phase 0 SQLite capacity gate therefore passes, and the load result does **not** trigger

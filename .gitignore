@@ -14,4 +14,5 @@ htmlcov/
 coverage.xml
 dist/
 build/
+.gate-local/
 .vscode/
