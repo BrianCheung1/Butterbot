@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import time_ns
+from uuid import uuid4
 
 from butterbot.application.operations.idempotency import (
-    RetentionRegistry,
     TransportIdempotencyCoordinator,
+    discord_retention_registry,
 )
 from butterbot.application.operations.mutation_eligibility import GlobalMutationEligibility
 from butterbot.application.operations.telemetry import emit_operational_telemetry
+from butterbot.application.players.join import JOIN_NAMESPACE, JoinService
 from butterbot.application.transactions import ApplicationTransactionRunner
 from butterbot.discord_app.config import (
     PRODUCTION_DATABASE_PATH,
@@ -34,6 +37,7 @@ class ApplicationRuntime:
     transport_idempotency: TransportIdempotencyCoordinator
     transactions: ApplicationTransactionRunner
     telemetry: StructuredLoggingTelemetry
+    join_service: JoinService
 
     async def close(self) -> None:
         await self.database.close()
@@ -113,16 +117,23 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
         "economy.mutations_state",
         lambda: telemetry.mutations_state(enabled=decision.allowed, reason=decision.reason),
     )
+    idempotency = TransportIdempotencyCoordinator(
+        discord_retention_registry(JOIN_NAMESPACE), telemetry=telemetry
+    )
+    transactions = ApplicationTransactionRunner(
+        database.unit_of_work_factory, is_retryable=is_sqlite_busy, telemetry=telemetry
+    )
     return ApplicationRuntime(
         database=database,
         mutation_eligibility=eligibility,
-        transport_idempotency=TransportIdempotencyCoordinator(
-            RetentionRegistry({}), telemetry=telemetry
-        ),
-        transactions=ApplicationTransactionRunner(
-            database.unit_of_work_factory,
-            is_retryable=is_sqlite_busy,
-            telemetry=telemetry,
-        ),
+        transport_idempotency=idempotency,
+        transactions=transactions,
         telemetry=telemetry,
+        join_service=JoinService(
+            transactions,
+            idempotency,
+            eligibility,
+            clock_ms=lambda: time_ns() // 1_000_000,
+            id_factory=uuid4,
+        ),
     )

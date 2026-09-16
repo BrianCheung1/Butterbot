@@ -31,7 +31,21 @@ Every implementation slice follows this lifecycle:
    - `SLICE X.Y: PASS`; or
    - `SLICE X.Y: FAIL`.
 8. A failed slice returns to remediation and must be independently reviewed again.
-9. The next dependent slice may begin only after the current slice receives `PASS`.
+9. The next dependent slice may begin only after the current slice receives `PASS`, except for
+   the explicitly authorized provisional Slice 1.1 exception below.
+
+### 2026-09-16 exception: provisional local Slice 1.1
+
+The user authorized deferring native Linux validation and continuing local Slice 1.1 development.
+This permits implementation and disposable-database tests for `/join` before Slice 1.0 receives
+PASS. It does not convert Slice 1.0's FAIL into acceptance, waive any native case, authorize later
+slices, or permit production deployment/public mutations. Normal configuration remains fail-closed;
+local success paths use an injected test eligibility policy, not a production safety bypass.
+
+Before release acceptance, run the complete native gate against the then-final candidate and
+independently review both the foundation and dependent join behavior. Linux failures may require
+Slice 1.1 rework. The archived Slice 1.0 candidate remains historical evidence, not source binding
+for subsequent code. See the 2026-09-16 decision in `docs/decisions.md`.
 
 Implementation completion is not gate acceptance. Passing existing tests is evidence, not proof
 that a slice is safe to depend on. A review must not be limited to known findings, existing tests,
@@ -147,8 +161,8 @@ separate pre-public-mutation prerequisite because the host does not yet exist.
 
 ### Slice 1.0: Persistence and composition foundation — depends on the Phase 0 gate, Spine
 
-**Status: IN REVIEW — current failed-gate remediation is locally implemented; native Linux
-verification and a repeat independent gate are required.**
+**Status: IN REVIEW — code blockers remediated; release verdict remains FAIL. Native Linux
+verification is explicitly deferred, not waived.**
 
 Create the deliberately designed minimal Alembic baseline, async engine/unit of work,
 schema-readiness check, database lifecycle, global mutation eligibility adapter, and initial
@@ -163,7 +177,8 @@ and graceful disposal. No command creates economic value.
 
 ### Slice 1.1: Explicit `/join` — depends on 1.0, Spine
 
-**Status: BLOCKED — requires `SLICE 1.0: PASS`.**
+**Status: IN REVIEW — provisional local implementation and verification complete. Release
+acceptance remains blocked by Slice 1.0 native validation and independent review.**
 
 A Discord user explicitly creates or retrieves one global player and wallet. The interaction
 ID protects transport replay; unique Discord-player and player-wallet constraints protect the

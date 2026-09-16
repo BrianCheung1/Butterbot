@@ -5,11 +5,12 @@
 Slice 1.0 now provides the first Alembic baseline, async SQLAlchemy/SQLite runtime, explicit unit
 of work, schema readiness and process-lock checks, Operations transport-idempotency coordinator
 and repository, global mutation eligibility adapter, structured operational telemetry, and a
-composition root. The presentation-only `/ping` cog remains the only command. There is no `/join`,
-`/balance`, economic-value mutation, progression, inventory, banking, or safety/access behavior.
+composition root. Provisional Slice 1.1 adds an application-owned join transaction and a private
+`/join` adapter alongside `/ping`. There is no `/balance`, economic-value creation, progression,
+inventory, banking, or durable safety/access behavior. Native Linux acceptance remains deferred.
 
 The package direction below remains incremental: only the concrete boundaries needed by Slice
-1.0 exist, and later feature packages are not pre-scaffolded.
+1.0 and local Slice 1.1 exist, and later feature packages are not pre-scaffolded.
 
 ## Intended shape
 
@@ -165,6 +166,14 @@ can reject all joins when mutations are globally disabled or startup/schema read
 satisfied, while Slice 1.1 tests the allowed and globally-disabled outcomes with a fake. It must
 not infer authority from Discord roles, create placeholder restriction rows, or add progression
 state. After Slice 1.3, the same application boundary is backed by the durable central policy.
+
+The join service uses the transaction runner and `players.join` transport namespace. A new
+eligible request creates or retrieves the player and complete zero-initialized wallet; returning
+joins preserve balances and do not repair missing state. Existing non-active identities are not
+reactivated. Typed rejections persist only Operations bookkeeping. Replays return the recorded
+fixed outcome without reexecuting eligibility or aggregate mutation. Outcome payloads are exactly
+empty objects. Discord defers privately before invoking the service and sends the private result
+only after transaction completion; response failure cannot roll back a committed join.
 
 ### Shared transport idempotency
 

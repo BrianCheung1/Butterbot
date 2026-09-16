@@ -622,3 +622,36 @@ changes during execution fail the gate; Windows/WSL preflight cannot pass.
 
 Native Linux evidence for the repaired candidate is still required. No host was provisioned
 by these local changes; Slice 1.0 remains IN REVIEW and Slice 1.1 remains blocked.
+
+### 2026-09-16 — Defer Linux execution and permit provisional local join development
+
+**Context:** The user explicitly chose to defer Linux and continue locally after discussing
+the dependency and rework risk. Slice 1.0 code remediation and Windows checks passed, but
+native release acceptance is still absent.
+
+**Decision:** Permit provisional Slice 1.1 implementation and local tests before Slice 1.0
+PASS. This is a narrow development-order exception, not release acceptance or authorization
+for later slices or public mutation. Preserve all native gate requirements; run them against
+the final candidate before release acceptance or production use. The original candidate
+075252ea9a1419cc431f3466902953309ec34b91 and its bundle remain historical and unchanged.
+Keep normal composition's production storage checks and disabled mutation default. Exercise
+allowed joins only in disposable local tests with an injected eligibility policy.
+
+`players.join` is the stable seven-day transport namespace. The application service owns
+one transaction containing the request claim, player, zero-balance wallet/projection, and
+outcome. Distinct interactions converge through existing aggregate constraints. New requests
+evaluate global eligibility inside the transaction; denials commit only typed-rejection
+transport bookkeeping. Replays return their original outcome even after eligibility changes,
+without creating or repairing player/wallet state. Pseudonymized players are not reactivated.
+No player restrictions, ledger issuance, or new schema are introduced.
+
+Join outcomes have a fixed code and exactly an empty JSON object payload (two UTF-8 bytes,
+one root object, zero members, no nested values); input-derived IDs, names, balances, or other
+payload data are never persisted in the outcome. Replay decoding rejects other codes/kinds or
+nonempty payloads. This avoids expanding the generic outcome contract; explicit general
+byte/depth/member limits remain required before a later feature persists input-derived payloads.
+Discord defers and responds ephemerally, and performs no network work within the transaction.
+
+**Consequence:** Slice 1.1 can be tested locally but remains provisional. Native failures may
+require foundation and join rework. Neither Slice 1.0 nor Slice 1.1 is declared PASS, and the
+next slice is not automatically authorized.

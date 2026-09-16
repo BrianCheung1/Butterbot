@@ -32,6 +32,14 @@ async def test_composition_wires_fail_closed_mutation_policy_and_disposes(
         assert decision.allowed is False
         assert decision.reason == "globally_disabled"
         assert application.database.readiness.observed_revision == "20260914_0003"
+        result = await application.join_service.join(discord_user_id=123, interaction_id=456)
+        assert result.status == "disabled"
+        assert result.replayed is False
+        replay = await application.join_service.join(discord_user_id=123, interaction_id=456)
+        assert replay.status == "disabled"
+        assert replay.replayed is True
+        async with application.database.unit_of_work_factory() as transaction:
+            assert await transaction.players.get_by_discord_user_id(123) is None
     finally:
         await application.close()
 

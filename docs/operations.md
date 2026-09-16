@@ -4,6 +4,11 @@ Status: accepted Slice 0.4 operating contract, 2026-08-25. This document selects
 initial topology and defines prerequisites for the first production economy database. It does
 not provision infrastructure, create a migration, or implement a gameplay command.
 
+2026-09-16: native Linux validation is deferred while provisional Slice 1.1 development proceeds
+locally under the roadmap exception. No production-enable requirement is waived. Keep normal
+mutations disabled; successful local join tests use disposable storage and injected eligibility.
+Native evidence and independent acceptance must cover the then-final candidate before production.
+
 ## Responsibility model
 
 The deployment record, kept in the operator's private operations system rather than this

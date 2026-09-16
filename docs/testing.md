@@ -19,6 +19,20 @@ are intentionally adopted.
 The baseline local checks are Ruff linting and formatting, strict Pyright analysis, and
 pytest. Coverage is diagnostic; no percentage threshold is chosen yet.
 
+The 2026-09-16 user-authorized exception allows provisional local Slice 1.1 work while the
+Slice 1.0 native gate is deferred. It does not waive release acceptance: the final candidate
+still requires all native cases and independent review before production use. Join tests use
+disposable databases and an injected eligibility policy; normal mutation enablement protections
+remain in force. Historical candidate manifests must not be presented as proof of newer source.
+
+Slice 1.1 tests cover real-database creation/retrieval, same-key replay, distinct-interaction
+convergence, actor conflicts, stable eligibility denials, rollback after player/outcome writes,
+retry after a transient database failure, cancellation, transport expiry, unchanged existing
+balances, missing-wallet corruption, and inactive identities. Discord adapter tests verify
+private deferral before application work, private success/error responses, no privileged intents,
+and recovery after a real commit followed by a lost response. No live Discord or Linux run is
+implied by these local tests. Current results are in `slice-1-1-local-report.md`.
+
 ## Economic and progression validation
 
 Examples and unit tests are insufficient for a long-lived economy. As relevant systems are

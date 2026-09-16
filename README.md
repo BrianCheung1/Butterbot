@@ -1,8 +1,21 @@
 # Butterbot
 
 Butterbot is a planned Discord economy game designed for long-lived player progression.
-It currently provides a runnable Discord bootstrap, a `/ping` health check, and the Slice 1.0
-persistence/composition foundation. Gameplay has not been implemented.
+It currently provides a runnable Discord bootstrap, `/ping`, the Slice 1.0 persistence foundation,
+and a provisional Slice 1.1 `/join` command. Earning, spending, and progression are not implemented.
+
+Native Linux acceptance is deferred under the user-authorized local development exception.
+`/join` privately creates or retrieves a player and a zero-balance wallet when eligible. Normal
+local bot configuration keeps mutations disabled, so it replies that joining is unavailable.
+Successful creation is currently exercised in disposable local integration tests with an injected
+eligibility policy; no production safety bypass is provided. To run the join checks:
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider tests/test_join.py tests/test_join_command.py
+```
+
+Slice 1.0 and Slice 1.1 still require native evidence and independent release acceptance before
+production use. See the provisional exception in [ROADMAP.md](ROADMAP.md).
 
 ## Development setup
 
