@@ -9,6 +9,11 @@ locally under the roadmap exception. No production-enable requirement is waived.
 mutations disabled; successful local join tests use disposable storage and injected eligibility.
 Native evidence and independent acceptance must cover the then-final candidate before production.
 
+The separately authorized interactive development launcher creates fresh disposable databases,
+requires a dedicated bot token and one test guild/user, and exposes only ping/join there. It does
+not change normal production startup or permit existing data paths. Its local test results do
+not satisfy deployment-host verification. See README's interactive testing procedure.
+
 ## Responsibility model
 
 The deployment record, kept in the operator's private operations system rather than this

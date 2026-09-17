@@ -33,6 +33,11 @@ private deferral before application work, private success/error responses, no pr
 and recovery after a real commit followed by a lost response. No live Discord or Linux run is
 implied by these local tests. Current results are in `slice-1-1-local-report.md`.
 
+The interactive-development launcher additionally tests dedicated-token configuration, guild/user
+scope enforcement (including DM denial), guild-only registration, fresh storage despite ambient
+production configuration, symlink/junction redirection refusal, real zero-balance joins, and runtime
+ownership release after a simulated Discord failure. Automated tests do not contact Discord.
+
 ## Economic and progression validation
 
 Examples and unit tests are insufficient for a long-lived economy. As relevant systems are

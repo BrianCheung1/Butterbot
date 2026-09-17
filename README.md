@@ -7,8 +7,8 @@ and a provisional Slice 1.1 `/join` command. Earning, spending, and progression 
 Native Linux acceptance is deferred under the user-authorized local development exception.
 `/join` privately creates or retrieves a player and a zero-balance wallet when eligible. Normal
 local bot configuration keeps mutations disabled, so it replies that joining is unavailable.
-Successful creation is currently exercised in disposable local integration tests with an injected
-eligibility policy; no production safety bypass is provided. To run the join checks:
+Successful creation can be exercised in disposable local integration tests or the separate
+interactive development launcher below. To run the join checks:
 
 ```powershell
 .venv/Scripts/python.exe -m pytest -q -p no:cacheprovider tests/test_join.py tests/test_join_command.py
@@ -70,8 +70,46 @@ from the repository root:
 python -m butterbot
 ```
 
-The bot uses Discord's default, non-privileged intents. It synchronizes `/ping` globally at
+The bot uses Discord's default, non-privileged intents. It synchronizes `/ping` and `/join` globally at
 startup, and Discord may take time to make a newly synchronized global command visible.
+
+## Interactive `/join` testing with disposable data
+
+Use a separate Discord development application/bot, invited to a private test server with
+the `bot` and `applications.commands` scopes. Put its token and the test IDs in your ignored
+local `.env` (never in `.env.example` or chat):
+
+```dotenv
+BUTTERBOT_DEV_DISCORD_TOKEN=replace-with-development-bot-token
+BUTTERBOT_DEV_GUILD_ID=your-test-server-id
+BUTTERBOT_DEV_USER_ID=your-discord-user-id
+BUTTERBOT_DEV_CHANNEL_ID=your-test-channel-id
+```
+
+Run from this checkout:
+
+```powershell
+.venv/Scripts/python.exe -m butterbot.discord_app.development
+```
+
+The launcher requires its own token and refuses to reuse the configured `DISCORD_TOKEN`.
+It registers `/ping` and `/join` only in the selected test server, and rejects commands from
+other users, servers, channels, or DMs before calling the application. Threads have their own
+channel IDs and are also rejected unless explicitly configured. It does not synchronize global
+commands. Normal startup and production mutation checks are unchanged.
+
+Each launch allocates and migrates a new database under ignored
+`data/discord-development/join-*/`. It never uses `BUTTERBOT_DATABASE_PATH`, never opens an
+existing database, and never automatically migrates production storage. Development joins use
+the real transaction service and storage monitoring with a zero-balance wallet. No currency
+is issued. No database-path override is offered.
+
+In the configured server, run `/join`: expect a private "You joined Butterbot!" response.
+Run it again: expect a private "already joined" response. Stop the launcher with Ctrl+C.
+Restarting begins a new empty session, so `/join` should create your test player again.
+Disposed session files are retained for debugging; old sessions are never reused automatically.
+Use a test server where only the intended tester participates. This is local development,
+not native Linux or release acceptance evidence.
 
 Quality checks:
 

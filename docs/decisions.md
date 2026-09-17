@@ -655,3 +655,37 @@ Discord defers and responds ephemerally, and performs no network work within the
 **Consequence:** Slice 1.1 can be tested locally but remains provisional. Native failures may
 require foundation and join rework. Neither Slice 1.0 nor Slice 1.1 is declared PASS, and the
 next slice is not automatically authorized.
+
+### 2026-09-16 — Isolated interactive Discord join development
+
+**Context:** The user requested interactive `/join` testing while Linux acceptance remains
+deferred. Normal startup intentionally cannot enable Windows mutations against a configured
+database.
+
+**Decision:** Add an explicit `python -m butterbot.discord_app.development` entry point,
+separate from normal composition. Require a dedicated development token, test guild ID, and
+tester user ID. Do not fall back to the normal token or reuse it when configured. Register only
+the explicit ping/join extensions as guild commands; never synchronize global commands. Check
+both the server and tester at the command-tree boundary, including denying direct messages.
+
+Each launch creates a new directory under the checkout's ignored `data/discord-development`
+and applies the unchanged migrations with an explicit URL before opening the normal database
+runtime. There is no supplied database path and no reuse of existing storage. Reject redirected
+storage roots. Retain disposable files for diagnosis after shutdown; subsequent launches always
+start empty. This explicit test launcher is the sole exception to normal startup's no-migration
+rule and enabled-mutation production-path requirement. Normal settings/composition are unchanged.
+
+Use the real join service, transactions, process ownership, schema checks, storage monitor, and
+runtime-safety eligibility. No currency is created and no other mutation service is composed.
+Logs identify development sessions and tokens are excluded from configuration representations.
+
+**Consequence:** The authorized tester can exercise join creation/retrieval in Discord without
+production data or a Linux host. The launcher's guild/user checks are a development access limit,
+not the future durable administrator capability policy. This remains provisional local testing;
+all native Linux, independent acceptance, and public-enable gates remain required.
+
+2026-09-17 clarification: interactive development additionally requires a single channel ID.
+The command-tree check requires exact guild, user, and channel matches; other channels and
+threads cannot execute the application. Guild command registration is unchanged. This limits
+execution, not Discord's command-picker visibility. The local server setting remains the
+previously selected server; the newly supplied identifier is a channel, not a replacement guild.

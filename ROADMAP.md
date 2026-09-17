@@ -40,7 +40,8 @@ The user authorized deferring native Linux validation and continuing local Slice
 This permits implementation and disposable-database tests for `/join` before Slice 1.0 receives
 PASS. It does not convert Slice 1.0's FAIL into acceptance, waive any native case, authorize later
 slices, or permit production deployment/public mutations. Normal configuration remains fail-closed;
-local success paths use an injected test eligibility policy, not a production safety bypass.
+local success paths use disposable tests or the separately authorized development launcher,
+restricted to one test guild/user with fresh storage. Normal production enablement is unchanged.
 
 Before release acceptance, run the complete native gate against the then-final candidate and
 independently review both the foundation and dependent join behavior. Linux failures may require

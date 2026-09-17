@@ -175,6 +175,11 @@ fixed outcome without reexecuting eligibility or aggregate mutation. Outcome pay
 empty objects. Discord defers privately before invoking the service and sends the private result
 only after transaction completion; response failure cannot roll back a committed join.
 
+The separate interactive development entry point constructs this same service over a fresh
+disposable database. A dedicated development bot restricts command execution to one tester and
+one guild before invoking the service. Normal configuration/composition remains fail-closed;
+the development launcher never consumes a production database path or synchronizes global commands.
+
 ### Shared transport idempotency
 
 Transport idempotency is application execution support, not Discord presentation, game-domain
