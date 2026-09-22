@@ -120,6 +120,14 @@ async def test_development_syncs_only_test_guild_with_default_intents() -> None:
         await bot.close()
 
 
+def test_development_has_no_text_commands_that_bypass_interaction_scope() -> None:
+    bot = DevelopmentBot(
+        DevelopmentSettings("not-used", 123, 456, 789), AsyncMock(), NullOperationsTelemetry()
+    )
+    assert bot.help_command is None
+    assert bot.all_commands == {}
+
+
 @pytest.mark.parametrize(
     "guild_id,user_id,channel_id,allowed",
     [

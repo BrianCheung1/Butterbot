@@ -689,3 +689,9 @@ The command-tree check requires exact guild, user, and channel matches; other ch
 threads cannot execute the application. Guild command registration is unchanged. This limits
 execution, not Discord's command-picker visibility. The local server setting remains the
 previously selected server; the newly supplied identifier is a channel, not a replacement guild.
+
+2026-09-17 independent review: the Discord base class installs a text `help` command whose
+mention-based dispatch does not use the application-command scope check. Disable default help
+in the development bot so its only commands are the explicitly registered, scoped slash commands.
+This closes an unintended public-response path outside the configured channel/user; no join
+mutation bypass was demonstrated. Production composition is unchanged.

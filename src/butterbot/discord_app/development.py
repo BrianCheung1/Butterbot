@@ -97,6 +97,7 @@ class DevelopmentBot(commands.Bot):
     ) -> None:
         super().__init__(
             command_prefix=commands.when_mentioned,
+            help_command=None,
             intents=discord.Intents.default(),
             tree_cls=DevelopmentCommandTree,
             activity=discord.Game("Disposable /join testing"),
