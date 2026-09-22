@@ -695,3 +695,24 @@ mention-based dispatch does not use the application-command scope check. Disable
 in the development bot so its only commands are the explicitly registered, scoped slash commands.
 This closes an unintended public-response path outside the configured channel/user; no join
 mutation bypass was demonstrated. Production composition is unchanged.
+
+### 2026-09-22 — Provisional local balance and consistent read snapshots
+
+The user authorized committing/pushing the join review fix, restarting the isolated test bot,
+and implementing/reviewing local Slice 1.2 while native Linux remains deferred. This extends
+the development exception only to Slice 1.2; no production acceptance or Slice 1.3 authorization.
+The join review fix was committed and pushed as `e53641d`.
+
+`/balance` is self-only and always privately deferred/responded to. It returns the exact integer
+wallet projection for an active player, invites an absent identity to `/join`, and hides inactive
+identity balances. Missing wallets return unavailable; missing projections fail with a private,
+sanitized error. It never creates, repairs, reactivates, records transport requests, or changes
+balances. Global mutation eligibility is intentionally not consulted for this safe query.
+
+The service uses a deferred SQLite transaction for a consistent player/wallet/projection snapshot,
+reusing existing bounded admission, identity validation, cancellation cleanup, and shutdown drain.
+It does not acquire BEGIN IMMEDIATE's writer lock. Admission still shares the existing four-slot
+limit; separate read admission is deferred until measured need. The snapshot factory is for trusted
+query code, not an enforced database write sandbox; the balance service only calls repository reads.
+No schema changes, new migration, support inspection, or durable access/restriction policy is added.
+The development launcher explicitly registers balance under the same guild/user/channel restrictions.

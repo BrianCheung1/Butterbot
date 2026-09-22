@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from time import time_ns
 from uuid import uuid4
 
+from butterbot.application.economy.balance import BalanceService
 from butterbot.application.operations.idempotency import (
     TransportIdempotencyCoordinator,
     discord_retention_registry,
@@ -37,6 +38,7 @@ class ApplicationRuntime:
     transport_idempotency: TransportIdempotencyCoordinator
     transactions: ApplicationTransactionRunner
     telemetry: StructuredLoggingTelemetry
+    balance_service: BalanceService
     join_service: JoinService
 
     async def close(self) -> None:
@@ -129,6 +131,7 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
         transport_idempotency=idempotency,
         transactions=transactions,
         telemetry=telemetry,
+        balance_service=BalanceService(database.unit_of_work_factory.read_snapshot),
         join_service=JoinService(
             transactions,
             idempotency,

@@ -20,6 +20,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from sqlalchemy import URL
 
+from butterbot.application.economy.balance import BalanceService, BalanceUseCase
 from butterbot.application.exact_integer import INT64_MAX
 from butterbot.application.operations.idempotency import (
     TransportIdempotencyCoordinator,
@@ -93,25 +94,31 @@ class DevelopmentCommandTree(app_commands.CommandTree[commands.Bot]):
 
 class DevelopmentBot(commands.Bot):
     def __init__(
-        self, settings: DevelopmentSettings, service: JoinUseCase, telemetry: OperationsTelemetry
+        self,
+        settings: DevelopmentSettings,
+        service: JoinUseCase,
+        telemetry: OperationsTelemetry,
+        balance_service: BalanceUseCase | None = None,
     ) -> None:
         super().__init__(
             command_prefix=commands.when_mentioned,
             help_command=None,
             intents=discord.Intents.default(),
             tree_cls=DevelopmentCommandTree,
-            activity=discord.Game("Disposable /join testing"),
+            activity=discord.Game("Disposable wallet testing"),
         )
         self.development_guild_id = settings.guild_id
         self.development_user_id = settings.user_id
         self.development_channel_id = settings.channel_id
         self.join_service = service
+        self.balance_service = balance_service
         self.operations_telemetry = telemetry
 
     async def setup_hook(self) -> None:
         # Keep this explicit: future production extensions are not enabled automatically.
         await self.load_extension("butterbot.discord_app.extensions.ping")
         await self.load_extension("butterbot.discord_app.extensions.join")
+        await self.load_extension("butterbot.discord_app.extensions.balance")
         guild = discord.Object(id=self.development_guild_id)
         self.tree.copy_global_to(guild=guild)
         self.tree.clear_commands(guild=None)
@@ -168,7 +175,12 @@ async def run_development(settings: DevelopmentSettings) -> None:
             "each launch starts empty. Not production or native acceptance evidence.",
             database_path.parent.name,
         )
-        bot = DevelopmentBot(settings, service, telemetry)
+        bot = DevelopmentBot(
+            settings,
+            service,
+            telemetry,
+            BalanceService(database.unit_of_work_factory.read_snapshot),
+        )
         await serve_until_shutdown(bot, settings.discord_token)
     finally:
         await database.close()

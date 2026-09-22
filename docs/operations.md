@@ -500,3 +500,12 @@ sibling artifacts directory together with its JSON report; the report binds sour
 selected tests, outcomes and host information. An acceptance report requires all mandatory
 cases, and only a proven pre-child EPERM/EACCES namespace denial may skip. Native evidence for
 this new candidate remains outstanding; local Windows results do not authorize Slice 1.1.
+
+## Provisional local wallet testing (2026-09-22)
+
+The isolated development launcher now explicitly registers `/ping`, `/join`, and `/balance` under
+the same configured guild, tester, and channel. Each restart allocates fresh disposable storage.
+Test `/balance` before joining (private invitation), `/join`, `/balance` (zero coins), and `/join`
+again (existing wallet). The normal disabled mutation setting does not deny safe balance reads.
+Native acceptance and public-enable prerequisites above remain outstanding. No live data migration
+or production deployment is authorized by this development exception.

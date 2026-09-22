@@ -196,12 +196,15 @@ class SqlAlchemyUnitOfWork:
         maximum_busy_timeout_ms: int,
         admission_budget_ms: int,
         identity_guard: DatabaseIdentityGuard,
+        *,
+        read_snapshot: bool = False,
     ) -> None:
         self._engine = engine
         self._lifecycle = lifecycle
         self._maximum_busy_timeout_ms = maximum_busy_timeout_ms
         self._admission_budget_ms = admission_budget_ms
         self._identity_guard = identity_guard
+        self._read_snapshot = read_snapshot
         self._connection: AsyncConnection | None = None
         self._session: AsyncSession | None = None
         self._after_commit: list[Callable[[], None]] = []
@@ -239,7 +242,7 @@ class SqlAlchemyUnitOfWork:
             await connection.rollback()
             session = AsyncSession(bind=connection, expire_on_commit=False, autoflush=True)
             self._session = session
-            await session.execute(text("BEGIN IMMEDIATE"))
+            await session.execute(text("BEGIN" if self._read_snapshot else "BEGIN IMMEDIATE"))
             self._phase = TransactionPhase.ACTIVE
             aggregates = AggregateCompletenessTracker()
             self._aggregates = aggregates
@@ -537,4 +540,22 @@ class SqlAlchemyUnitOfWorkFactory:
             self._maximum_busy_timeout_ms,
             remaining_budget_ms,
             self._identity_guard,
+        )
+
+    def read_snapshot(
+        self, *, attempt: int = 1, remaining_budget_ms: int = 1_000
+    ) -> SqlAlchemyUnitOfWork:
+        """Deferred snapshot for query services, sharing ownership/drain/identity checks.
+
+        Callers must use only repository reads; this is not a write-capability sandbox.
+        """
+        if attempt < 1 or remaining_budget_ms < 1:
+            raise ValueError("read attempt and budget must be positive")
+        return SqlAlchemyUnitOfWork(
+            self._engine,
+            self._lifecycle,
+            self._maximum_busy_timeout_ms,
+            remaining_budget_ms,
+            self._identity_guard,
+            read_snapshot=True,
         )

@@ -81,7 +81,11 @@ async def run() -> None:
 
     logger.info("Starting Butterbot")
     try:
-        bot = create_bot(telemetry=application.telemetry, join_service=application.join_service)
+        bot = create_bot(
+            telemetry=application.telemetry,
+            join_service=application.join_service,
+            balance_service=application.balance_service,
+        )
         await serve_until_shutdown(bot, settings.discord_token)
     finally:
         await application.close()

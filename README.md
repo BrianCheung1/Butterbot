@@ -2,7 +2,7 @@
 
 Butterbot is a planned Discord economy game designed for long-lived player progression.
 It currently provides a runnable Discord bootstrap, `/ping`, the Slice 1.0 persistence foundation,
-and a provisional Slice 1.1 `/join` command. Earning, spending, and progression are not implemented.
+and provisional local `/join` and `/balance` commands. Earning, spending, and progression are not implemented.
 
 Native Linux acceptance is deferred under the user-authorized local development exception.
 `/join` privately creates or retrieves a player and a zero-balance wallet when eligible. Normal
@@ -70,10 +70,10 @@ from the repository root:
 python -m butterbot
 ```
 
-The bot uses Discord's default, non-privileged intents. It synchronizes `/ping` and `/join` globally at
+The bot uses Discord's default, non-privileged intents. It synchronizes `/ping`, `/join`, and `/balance` globally at
 startup, and Discord may take time to make a newly synchronized global command visible.
 
-## Interactive `/join` testing with disposable data
+## Interactive wallet testing with disposable data
 
 Use a separate Discord development application/bot, invited to a private test server with
 the `bot` and `applications.commands` scopes. Put its token and the test IDs in your ignored
@@ -93,7 +93,7 @@ Run from this checkout:
 ```
 
 The launcher requires its own token and refuses to reuse the configured `DISCORD_TOKEN`.
-It registers `/ping` and `/join` only in the selected test server, and rejects commands from
+It registers `/ping`, `/join`, and `/balance` only in the selected test server, and rejects commands from
 other users, servers, channels, or DMs before calling the application. Threads have their own
 channel IDs and are also rejected unless explicitly configured. It does not synchronize global
 commands. Normal startup and production mutation checks are unchanged.
@@ -104,8 +104,9 @@ existing database, and never automatically migrates production storage. Developm
 the real transaction service and storage monitoring with a zero-balance wallet. No currency
 is issued. No database-path override is offered.
 
-In the configured server, run `/join`: expect a private "You joined Butterbot!" response.
-Run it again: expect a private "already joined" response. Stop the launcher with Ctrl+C.
+In the configured channel, run `/balance` before joining: expect a private invitation to `/join`.
+Then run `/join`: expect a private "You joined Butterbot!" response.
+Run `/balance`: expect a private zero-coin wallet. Run `/join` again: expect a private "already joined" response. Stop the launcher with Ctrl+C.
 Restarting begins a new empty session, so `/join` should create your test player again.
 Disposed session files are retained for debugging; old sessions are never reused automatically.
 Use a test server where only the intended tester participates. This is local development,

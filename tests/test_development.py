@@ -102,7 +102,7 @@ def test_development_allocates_fresh_database_and_ignores_normal_database_enviro
 
 async def test_development_syncs_only_test_guild_with_default_intents() -> None:
     settings = DevelopmentSettings("not-used", 123, 456, 789)
-    bot = DevelopmentBot(settings, AsyncMock(), NullOperationsTelemetry())
+    bot = DevelopmentBot(settings, AsyncMock(), NullOperationsTelemetry(), AsyncMock())
     sync = AsyncMock(return_value=[])
     bot.tree.sync = sync
     try:
@@ -111,6 +111,7 @@ async def test_development_syncs_only_test_guild_with_default_intents() -> None:
         assert {c.name for c in bot.tree.get_commands(guild=discord.Object(id=123))} == {
             "ping",
             "join",
+            "balance",
         }
         sync.assert_awaited_once()
         assert sync.await_args is not None
@@ -169,12 +170,16 @@ async def test_development_runner_joins_on_disposable_storage_and_closes_after_d
 ) -> None:
     async def fake_discord(bot: DevelopmentBot, token: str) -> None:
         assert token == "not-used"
+        assert bot.balance_service is not None
+        assert (await bot.balance_service.balance(discord_user_id=456)).status == "unjoined"
         assert (
             await bot.join_service.join(discord_user_id=456, interaction_id=789)
         ).status == "created"
         assert (
             await bot.join_service.join(discord_user_id=456, interaction_id=790)
         ).status == "already_joined"
+        balance = await bot.balance_service.balance(discord_user_id=456)
+        assert balance.status == "available" and balance.amount == 0
         await bot.close()
         raise RuntimeError("test disconnect")
 

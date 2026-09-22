@@ -217,3 +217,13 @@ is explicitly loaded. The configured 600-second runner bound produces failure, n
 The Windows policy unit tests deliberately simulate reports; their generated fixtures are
 not native Linux evidence. The independent review artifacts describe the earlier candidate
 and must not be reused as evidence for the new head.
+
+## Provisional Slice 1.2 local validation
+
+The 2026-09-22 user authorization extends provisional local development to `/balance`; native
+release acceptance remains deferred. Real SQLite tests cover zero/nonzero/signed-64-bit maximum
+balances, self-only lookup, unjoined/deleted/inactive identities, missing wallet/projection without
+repair, unchanged complete database contents, disabled-mutation composition, reads during a writer,
+and a consistent snapshot across a competing commit. Adapter tests cover private defer/send,
+sanitized errors, cancellation, response loss without retry, and absence of other-player parameters.
+No live Discord interaction or native Linux guarantee is implied by automated local checks.

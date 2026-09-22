@@ -32,7 +32,7 @@ Every implementation slice follows this lifecycle:
    - `SLICE X.Y: FAIL`.
 8. A failed slice returns to remediation and must be independently reviewed again.
 9. The next dependent slice may begin only after the current slice receives `PASS`, except for
-   the explicitly authorized provisional Slice 1.1 exception below.
+   the explicitly authorized provisional local exceptions below.
 
 ### 2026-09-16 exception: provisional local Slice 1.1
 
@@ -47,6 +47,14 @@ Before release acceptance, run the complete native gate against the then-final c
 independently review both the foundation and dependent join behavior. Linux failures may require
 Slice 1.1 rework. The archived Slice 1.0 candidate remains historical evidence, not source binding
 for subsequent code. See the 2026-09-16 decision in `docs/decisions.md`.
+
+### 2026-09-22 exception: provisional local Slice 1.2
+
+The user explicitly authorized the next-step plan including local `/balance` development,
+verification, and review while Linux remains deferred. This extends the narrow exception to
+Slice 1.2 only. Slice 1.0 and 1.1 release FAIL remain in force; no Slice 1.3 work or production
+use is authorized. Native evidence and independent release acceptance must cover the final
+foundation, join, and balance candidate before production use.
 
 Implementation completion is not gate acceptance. Passing existing tests is evidence, not proof
 that a slice is safe to depend on. A review must not be limited to known findings, existing tests,
@@ -189,6 +197,8 @@ documented application-level global join/mutation eligibility policy; `/join` do
 query player-specific restriction rows.
 
 ### Slice 1.2: Pure private `/balance` — depends on 1.1, Spine
+
+**Status: IN REVIEW — provisional local implementation; native release acceptance deferred.**
 
 A joined player views their wallet ephemerally. The query never creates state; an unjoined user
 is invited to `/join`. There is no public other-player wealth command. Support inspection uses

@@ -31,11 +31,11 @@ async def test_setup_hook_loads_each_configured_extension() -> None:
 async def test_default_extensions_register_private_join_without_privileged_intents() -> None:
     service = AsyncMock()
     service.join.return_value = JoinResult("disabled", False)
-    bot = create_bot(join_service=service)
+    bot = create_bot(join_service=service, balance_service=AsyncMock())
     bot.tree.sync = AsyncMock(return_value=[])
     try:
         await bot.setup_hook()
-        assert {command.name for command in bot.tree.get_commands()} == {"ping", "join"}
+        assert {command.name for command in bot.tree.get_commands()} == {"ping", "join", "balance"}
         assert bot.intents.message_content is False
         assert bot.intents.members is False
         assert bot.intents.presences is False
