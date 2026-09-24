@@ -14,9 +14,13 @@ from butterbot.application.operations.ports import (
 )
 from butterbot.application.operations.telemetry import emit_operational_telemetry
 from butterbot.application.players.ports import PlayerRepository
+from butterbot.application.safety.ports import SafetyRepository
 
 
 class UnitOfWork(Protocol):
+    @property
+    def safety(self) -> SafetyRepository: ...
+
     @property
     def players(self) -> PlayerRepository: ...
 

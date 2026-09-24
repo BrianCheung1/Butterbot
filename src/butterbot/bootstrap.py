@@ -12,12 +12,14 @@ from butterbot.application.operations.idempotency import (
 from butterbot.application.operations.mutation_eligibility import GlobalMutationEligibility
 from butterbot.application.operations.telemetry import emit_operational_telemetry
 from butterbot.application.players.join import JOIN_NAMESPACE, JoinService
+from butterbot.application.safety.service import SAFETY_NAMESPACES, SafetyService
 from butterbot.application.transactions import ApplicationTransactionRunner
 from butterbot.discord_app.config import (
     PRODUCTION_DATABASE_PATH,
     PRODUCTION_DATABASE_ROOT,
     Settings,
 )
+from butterbot.discord_app.safety_config import load_safety_policy
 from butterbot.infrastructure.persistence.database import (
     DatabaseRuntime,
     create_database_runtime,
@@ -28,6 +30,7 @@ from butterbot.infrastructure.persistence.readiness import (
     DatabaseReadinessError,
 )
 from butterbot.infrastructure.persistence.storage import DatabaseStorageContract
+from butterbot.infrastructure.safety_alerts import local_safety_alert
 from butterbot.infrastructure.telemetry import StructuredLoggingTelemetry
 
 
@@ -38,6 +41,7 @@ class ApplicationRuntime:
     transport_idempotency: TransportIdempotencyCoordinator
     transactions: ApplicationTransactionRunner
     telemetry: StructuredLoggingTelemetry
+    safety_service: SafetyService
     balance_service: BalanceService
     join_service: JoinService
 
@@ -46,6 +50,7 @@ class ApplicationRuntime:
 
 
 async def compose_application(settings: Settings) -> ApplicationRuntime:
+    safety_policy = load_safety_policy()
     telemetry = StructuredLoggingTelemetry(release=settings.release_id)
     production_storage_configured = (
         settings.database_path.as_posix() == PRODUCTION_DATABASE_PATH
@@ -120,7 +125,7 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
         lambda: telemetry.mutations_state(enabled=decision.allowed, reason=decision.reason),
     )
     idempotency = TransportIdempotencyCoordinator(
-        discord_retention_registry(JOIN_NAMESPACE), telemetry=telemetry
+        discord_retention_registry(JOIN_NAMESPACE, *SAFETY_NAMESPACES), telemetry=telemetry
     )
     transactions = ApplicationTransactionRunner(
         database.unit_of_work_factory, is_retryable=is_sqlite_busy, telemetry=telemetry
@@ -131,6 +136,15 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
         transport_idempotency=idempotency,
         transactions=transactions,
         telemetry=telemetry,
+        safety_service=SafetyService(
+            transactions,
+            idempotency,
+            policy=safety_policy,
+            clock_ms=lambda: time_ns() // 1_000_000,
+            id_factory=uuid4,
+            alert=local_safety_alert,
+            runtime_safety=database.storage_monitor,
+        ),
         balance_service=BalanceService(database.unit_of_work_factory.read_snapshot),
         join_service=JoinService(
             transactions,

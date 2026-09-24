@@ -338,3 +338,143 @@ class LedgerPostingModel(Base):
         Uuid(), ForeignKey("economy_accounts.id", ondelete="RESTRICT"), primary_key=True
     )
     amount: Mapped[int] = mapped_column(BigInteger)
+
+
+class SafetyBootstrapModel(Base):
+    __tablename__ = "safety_bootstrap"
+    __table_args__ = (
+        CheckConstraint("id = 1", name="ck_safety_bootstrap_once"),
+        _sqlite_integer("id"),
+        _sqlite_integer("created_at_ms"),
+        CheckConstraint("created_at_ms >= 0", name="ck_safety_bootstrap_time"),
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    created_at_ms: Mapped[int] = mapped_column(BigInteger)
+
+
+class CapabilityModel(Base):
+    __tablename__ = "safety_capabilities"
+    __table_args__ = (
+        CheckConstraint("actor_id > 0", name="ck_safety_capability_actor"),
+        CheckConstraint(
+            (
+                "capability IN "
+                "('capabilities.manage','players.inspect','restrictions.manage','proposals.approve','grants.propose')"
+            ),
+            name="ck_safety_capability_name",
+        ),
+        _sqlite_integer("actor_id"),
+    )
+    actor_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    capability: Mapped[str] = mapped_column(String(32), primary_key=True)
+
+
+class RestrictionModel(Base):
+    __tablename__ = "safety_restrictions"
+    __table_args__ = (
+        CheckConstraint("target_id >= 0", name="ck_safety_restriction_target"),
+        _sqlite_integer("target_id"),
+    )
+    # Zero is the explicit global full-freeze target; positive values are Discord identities.
+    target_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+
+
+class ProposalModel(Base):
+    __tablename__ = "safety_proposals"
+    __table_args__ = (
+        CheckConstraint(
+            (
+                "actor_id > 0 AND (approver_id IS NULL OR (approver_id > 0 AND "
+                "approver_id != actor_id))"
+            ),
+            name="ck_safety_proposal_actors",
+        ),
+        CheckConstraint(
+            "operation IN ('freeze','release','grant')", name="ck_safety_proposal_operation"
+        ),
+        CheckConstraint(
+            "(operation = 'grant' AND amount > 0) OR (operation != 'grant' AND amount = 0)",
+            name="ck_safety_proposal_amount",
+        ),
+        CheckConstraint(
+            "length(reason) BETWEEN 1 AND 256 AND instr(reason, char(0)) = 0",
+            name="ck_safety_proposal_reason",
+        ),
+        CheckConstraint(
+            "created_at_ms >= 0 AND expires_at_ms > created_at_ms", name="ck_safety_proposal_time"
+        ),
+        CheckConstraint("requires_approval IN (0,1)", name="ck_safety_proposal_requires_approval"),
+        CheckConstraint(
+            "status IN ('pending','approved','applied')", name="ck_safety_proposal_status"
+        ),
+        CheckConstraint(
+            (
+                "(status = 'pending' AND approver_id IS NULL) OR (status != 'pending'"
+                " AND (requires_approval = 0 OR approver_id IS NOT NULL))"
+            ),
+            name="ck_safety_proposal_approval",
+        ),
+        CheckConstraint(
+            "status != 'applied' OR operation != 'grant'", name="ck_safety_proposal_no_issuance"
+        ),
+        _sqlite_uuid("id"),
+        _sqlite_integer("actor_id"),
+        _sqlite_integer("approver_id", nullable=True),
+        _sqlite_integer("amount"),
+        _sqlite_integer("created_at_ms"),
+        _sqlite_integer("expires_at_ms"),
+        _sqlite_integer("requires_approval"),
+        Index("ix_safety_proposals_actor_time", "actor_id", "created_at_ms"),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    actor_id: Mapped[int] = mapped_column(BigInteger)
+    operation: Mapped[str] = mapped_column(String(16))
+    amount: Mapped[int] = mapped_column(BigInteger)
+    reason: Mapped[str] = mapped_column(String(256))
+    created_at_ms: Mapped[int] = mapped_column(BigInteger)
+    expires_at_ms: Mapped[int] = mapped_column(BigInteger)
+    requires_approval: Mapped[int] = mapped_column(BigInteger)
+    status: Mapped[str] = mapped_column(String(16))
+    approver_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
+
+class ProposalTargetModel(Base):
+    __tablename__ = "safety_proposal_targets"
+    __table_args__ = (
+        CheckConstraint("target_id >= 0", name="ck_safety_proposal_target"),
+        _sqlite_uuid("proposal_id"),
+        _sqlite_integer("target_id"),
+    )
+    proposal_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("safety_proposals.id", ondelete="RESTRICT"), primary_key=True
+    )
+    target_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+
+
+class AccessAuditModel(Base):
+    __tablename__ = "safety_access_audit"
+    __table_args__ = (
+        CheckConstraint(
+            "actor_id > 0 AND (target_id IS NULL OR target_id >= 0)",
+            name="ck_safety_audit_actor_target",
+        ),
+        CheckConstraint("length(action) BETWEEN 1 AND 64", name="ck_safety_audit_action"),
+        CheckConstraint(
+            "length(reason) BETWEEN 1 AND 256 AND instr(reason, char(0)) = 0",
+            name="ck_safety_audit_reason",
+        ),
+        CheckConstraint("created_at_ms >= 0", name="ck_safety_audit_time"),
+        _sqlite_uuid("id"),
+        _sqlite_uuid("proposal_id", nullable=True),
+        _sqlite_integer("actor_id"),
+        _sqlite_integer("target_id", nullable=True),
+        _sqlite_integer("created_at_ms"),
+        Index("ix_safety_audit_created", "created_at_ms", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    actor_id: Mapped[int] = mapped_column(BigInteger)
+    action: Mapped[str] = mapped_column(String(64))
+    target_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    proposal_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
+    reason: Mapped[str] = mapped_column(String(256))
+    created_at_ms: Mapped[int] = mapped_column(BigInteger)

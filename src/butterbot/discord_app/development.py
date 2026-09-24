@@ -29,11 +29,14 @@ from butterbot.application.operations.idempotency import (
 from butterbot.application.operations.mutation_eligibility import GlobalMutationEligibility
 from butterbot.application.operations.ports import OperationsTelemetry
 from butterbot.application.players.join import JOIN_NAMESPACE, JoinService, JoinUseCase
+from butterbot.application.safety.service import SAFETY_NAMESPACES, SafetyService
 from butterbot.application.transactions import ApplicationTransactionRunner
 from butterbot.discord_app.config import ConfigurationError
+from butterbot.discord_app.safety_config import load_development_operators, load_safety_policy
 from butterbot.discord_app.startup import configure_logging, serve_until_shutdown
 from butterbot.infrastructure.persistence.database import create_database_runtime, is_sqlite_busy
 from butterbot.infrastructure.persistence.readiness import DatabaseReadinessError
+from butterbot.infrastructure.safety_alerts import local_safety_alert
 from butterbot.infrastructure.telemetry import StructuredLoggingTelemetry
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -99,6 +102,7 @@ class DevelopmentBot(commands.Bot):
         service: JoinUseCase,
         telemetry: OperationsTelemetry,
         balance_service: BalanceUseCase | None = None,
+        safety_service: SafetyService | None = None,
     ) -> None:
         super().__init__(
             command_prefix=commands.when_mentioned,
@@ -112,6 +116,7 @@ class DevelopmentBot(commands.Bot):
         self.development_channel_id = settings.channel_id
         self.join_service = service
         self.balance_service = balance_service
+        self.safety_service = safety_service
         self.operations_telemetry = telemetry
 
     async def setup_hook(self) -> None:
@@ -119,6 +124,7 @@ class DevelopmentBot(commands.Bot):
         await self.load_extension("butterbot.discord_app.extensions.ping")
         await self.load_extension("butterbot.discord_app.extensions.join")
         await self.load_extension("butterbot.discord_app.extensions.balance")
+        await self.load_extension("butterbot.discord_app.extensions.safety")
         guild = discord.Object(id=self.development_guild_id)
         self.tree.copy_global_to(guild=guild)
         self.tree.clear_commands(guild=None)
@@ -150,6 +156,10 @@ def create_disposable_database() -> Path:
 
 
 async def run_development(settings: DevelopmentSettings) -> None:
+    policy = load_safety_policy()
+    operators = load_development_operators()
+    if operators and policy is None:
+        raise ConfigurationError("Development bootstrap requires an explicit safety policy.")
     database_path = create_disposable_database()
     telemetry = StructuredLoggingTelemetry(release=f"development-{database_path.parent.name}")
     database = await create_database_runtime(
@@ -159,6 +169,21 @@ async def run_development(settings: DevelopmentSettings) -> None:
         eligibility = GlobalMutationEligibility(
             configured_enabled=True, database_ready=True, runtime_safety=database.storage_monitor
         )
+        safety_service = SafetyService(
+            ApplicationTransactionRunner(
+                database.unit_of_work_factory, is_retryable=is_sqlite_busy, telemetry=telemetry
+            ),
+            TransportIdempotencyCoordinator(
+                discord_retention_registry(*SAFETY_NAMESPACES), telemetry=telemetry
+            ),
+            policy=policy,
+            clock_ms=lambda: time_ns() // 1_000_000,
+            id_factory=uuid4,
+            alert=local_safety_alert,
+            runtime_safety=database.storage_monitor,
+        )
+        if operators:
+            await safety_service.bootstrap(operators)
         service = JoinService(
             ApplicationTransactionRunner(
                 database.unit_of_work_factory, is_retryable=is_sqlite_busy, telemetry=telemetry
@@ -180,6 +205,7 @@ async def run_development(settings: DevelopmentSettings) -> None:
             service,
             telemetry,
             BalanceService(database.unit_of_work_factory.read_snapshot),
+            safety_service,
         )
         await serve_until_shutdown(bot, settings.discord_token)
     finally:

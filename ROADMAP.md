@@ -56,6 +56,15 @@ Slice 1.2 only. Slice 1.0 and 1.1 release FAIL remain in force; no Slice 1.3 wor
 use is authorized. Native evidence and independent release acceptance must cover the final
 foundation, join, and balance candidate before production use.
 
+### 2026-09-23 exception: provisional local Slice 1.3
+
+The user authorized continuing with Slice 1.3 after local balance testing. This extends the
+local development exception through administrator capabilities, proposals, inspection and
+restrictions only. Operator identities, numerical ceilings and alert destination require explicit
+approval before live bootstrap or slice completion; the user subsequently approved the proposed
+local policy (see the approval addendum in docs/decisions.md).
+Earlier native FAIL verdicts remain in force. No Slice 1.4 or production use is authorized.
+
 Implementation completion is not gate acceptance. Passing existing tests is evidence, not proof
 that a slice is safe to depend on. A review must not be limited to known findings, existing tests,
 the builder's summary, or only the files changed by the latest remediation.
@@ -208,6 +217,8 @@ no player-specific frozen-balance case before Slice 1.3; that slice owns durable
 restriction behavior and its read-policy tests.
 
 ### Slice 1.3: Administrator capability, proposal, and freeze workflow — depends on 1.1, Spine
+
+**Status: IN REVIEW — local policy and single-operator live smoke tests complete; native acceptance pending.**
 
 Add the safety/access migration; bootstrap approved operator identities; assign durable
 capabilities; inspect a player; propose an operation; require a second distinct approver above

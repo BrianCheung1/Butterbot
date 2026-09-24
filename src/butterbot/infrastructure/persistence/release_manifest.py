@@ -1,4 +1,4 @@
-"""Frozen case-sensitive schema fingerprints for release 20260914_0003."""
+"""Frozen case-sensitive schema fingerprints for release 20260922_0004."""
 
 RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     (
@@ -126,4 +126,104 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
         "trg_balances_reject_conflicting_insert",
         "economy_account_balances",
     ): "bff25719bf0d35802fd715eb3024dc4df88c3d161c139bed7fc29d7aada66294",
+    (
+        "table",
+        "safety_access_audit",
+        "safety_access_audit",
+    ): "9973a24c11a6f5d2b634bcf61ec11317a9581c7e8dd3bff116697bb09324f236",
+    (
+        "index",
+        "ix_safety_audit_created",
+        "safety_access_audit",
+    ): "511208c0d5249a69c1b6cea3e97d87e629cf8179e477391c091ddf37a533f9f2",
+    (
+        "table",
+        "safety_bootstrap",
+        "safety_bootstrap",
+    ): "9ea9d791863b85441fed618f7ba7e5078805913ace46081eb9b79dd61dda9303",
+    (
+        "table",
+        "safety_capabilities",
+        "safety_capabilities",
+    ): "c3e6118fc4f8a73202348c824c383746117b36dea210771a7738a02c5108dfc1",
+    (
+        "table",
+        "safety_proposals",
+        "safety_proposals",
+    ): "30dd7d48662a2e029607f3e2bbd3d34763e1b4da25f4af898a2647f25774749a",
+    (
+        "index",
+        "ix_safety_proposals_actor_time",
+        "safety_proposals",
+    ): "5f02172d9fb1b10f472a005da1782e53c07fd941c4a64f55bd9804626ea1ac66",
+    (
+        "table",
+        "safety_restrictions",
+        "safety_restrictions",
+    ): "f7cbc1696264d00d0ca393cc493820e7c57f3407dff44f2dc2c7e77770629220",
+    (
+        "table",
+        "safety_proposal_targets",
+        "safety_proposal_targets",
+    ): "f41e3a987b536291f5efe5a8462452590cd2c1c12ed4bdc91565c5d569721362",
+    (
+        "trigger",
+        "trg_safety_access_audit_no_replace",
+        "safety_access_audit",
+    ): "e90b9831abec5134b6429b2a95ba11eb2a649888e00a86d6b47c7c13616d6e46",
+    (
+        "trigger",
+        "trg_safety_access_audit_no_delete",
+        "safety_access_audit",
+    ): "dc07f7dc4caf08263eac0658cf488a58d6fefa687a28f2db788c3360313d0899",
+    (
+        "trigger",
+        "trg_safety_access_audit_no_update",
+        "safety_access_audit",
+    ): "aaf19ea70e133597bd2987182de096af1ed71eccc7127f7c2f781da1098b44b3",
+    (
+        "trigger",
+        "trg_safety_bootstrap_no_replace",
+        "safety_bootstrap",
+    ): "2d331c4b6219db8fb9612465e4c4bf4cfb542c5e10c48050ed82b6e8b413ee7a",
+    (
+        "trigger",
+        "trg_safety_bootstrap_no_delete",
+        "safety_bootstrap",
+    ): "41f8686cd3b116216687a3fa3b23c6da8392a5bd79a6aaa9ddae2d24665574e6",
+    (
+        "trigger",
+        "trg_safety_bootstrap_no_update",
+        "safety_bootstrap",
+    ): "2c384be66803fe9547e38529ad7cf563902583959ad70c7ba204b8bba559b1a4",
+    (
+        "trigger",
+        "trg_safety_proposals_no_replace",
+        "safety_proposals",
+    ): "f1e10fdee3ad8a9e2a46a7c358cc21b993b6608198c81bc46cba420e9c5961cf",
+    (
+        "trigger",
+        "trg_safety_proposals_no_delete",
+        "safety_proposals",
+    ): "e78bdbbd251324a0a26f7d1b407a15a25ebd8d512bdeb73574cb8e69f7c008ba",
+    (
+        "trigger",
+        "trg_safety_proposal_targets_no_replace",
+        "safety_proposal_targets",
+    ): "b756c2060fe1c61e857047257445a81865f75fe7c729859738e347878ccfc238",
+    (
+        "trigger",
+        "trg_safety_proposal_targets_no_delete",
+        "safety_proposal_targets",
+    ): "dc4c0a5b9f0683020f18d4a9b433242eca7343153d1d4f38bc313d3b9e084cf9",
+    (
+        "trigger",
+        "trg_safety_proposal_targets_no_update",
+        "safety_proposal_targets",
+    ): "acac3b7b36faa080b2b40a082535ec47f1a39641bf614d7b1dff8485f99359f4",
+    (
+        "trigger",
+        "trg_safety_proposals_transition",
+        "safety_proposals",
+    ): "f2b9d95e93132c360c0916113082461eb478e8459f2bdb55f7818317a4d7bca4",
 }

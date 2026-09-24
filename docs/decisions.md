@@ -716,3 +716,82 @@ limit; separate read admission is deferred until measured need. The snapshot fac
 query code, not an enforced database write sandbox; the balance service only calls repository reads.
 No schema changes, new migration, support inspection, or durable access/restriction policy is added.
 The development launcher explicitly registers balance under the same guild/user/channel restrictions.
+
+### 2026-09-23 — Provisional local administrator safety workflow
+
+The user authorized Slice 1.3 after the local balance smoke test. This extends provisional
+local development only; production/native acceptance and Slice 1.4 remain blocked. The proposed
+operator IDs, threshold, per-operation/24-hour ceilings and local_log destination have not yet
+been approved. Do not bootstrap a real operator or populate local policy until approval arrives.
+Test fixtures use explicit disposable policies and identities, not deployment defaults.
+
+Revision `20260922_0004` adds durable capabilities, a one-time bootstrap marker, global/player
+full restrictions, proposals/targets, and immutable access audit. Prior migrations remain frozen.
+Administrator authority never comes from Discord roles. Inspection rechecks durable permission
+inside its transaction and records an audit before returning; no inspection balance is cached.
+Capability changes require capabilities.manage, and revocation applies even before transport replay.
+Operators with that capability are trusted to delegate authority, including approver capability;
+separation of duties assumes reviewed distinct human operators, not merely two accounts.
+
+Proposals support freeze, release, and preparation of a grant. Grant approval does not issue
+coins. At most 25 distinct explicit Discord targets are accepted. Global restriction target 0
+is a distinct sentinel, never a user or monetary target. Every multi-target/global proposal and
+above-threshold monetary total requires a distinct durable approver. Single-target restrictions
+apply immediately; global freeze/release needs a second operator. The deployment mutation switch
+remains an immediate emergency stop without a second operator. Full freezes block new joins and
+grant proposals/approvals while preserving self balance reads, audited inspection, capability
+maintenance and safe restriction release. Future economic features must use the same policy
+inside their owning transaction. No unused inventory/trade/progression restriction tables exist.
+
+All safety mutations use explicit transactions and reviewed transport namespaces. Their stored
+transport outcomes remain fixed codes with an empty payload. Immutable audit receipts retain the
+operation fingerprint and result beyond seven-day transport cleanup; a stale request cannot
+regrant a revoked capability or reapply an old restriction. Receipt actor/fingerprint collisions
+fail instead of executing. UUID proposal identity is deterministically derived from the Discord
+interaction ID; distinct proposal submissions remain distinct business proposals.
+
+The configured per-operation ceiling applies to the total amount across targets. The rolling
+24-hour ceiling sums all grant proposals by the proposer, including pending/expired ones still
+in that interval, so approval cannot reserve unbounded money. Proposals expire after 24 hours.
+Approval rechecks the proposer's capability, current ceilings, expiration, and current freezes.
+Actual grant execution must recheck authority, freezes, expiry, ledger/business uniqueness and
+monetary ceilings in Slice 1.4; these proposal records are not authorization to skip that gate.
+
+Audit/bootstrap rows reject update, delete and SQLite REPLACE regardless of recursive_triggers.
+Proposal facts and targets cannot be updated/deleted/replaced; only a pending proposal can
+transition to approved/applied. Audit and restrictions commit atomically with the action.
+Post-commit local_log alerts contain action/audit ID, not reasons, tokens or balances. Delivery
+failure does not undo a committed action; durable audit remains authoritative. Reliable remote
+alerting is a production prerequisite, not claimed by the local sink.
+
+Normal startup does not bootstrap operators. The explicit stopped-service local bootstrap CLI
+accepts only canonical paths under disposable development storage and consumes bootstrap once.
+The development launcher may bootstrap an explicitly configured operator list only in each newly
+allocated empty session and only with a complete policy. It never changes previously stored
+capabilities at restart. Live dev command scope remains the existing guild/user/channel; a second
+reviewed operator cannot interact until a separate scope expansion is explicitly authorized.
+
+
+Slice 1.3 independent review identified a non-blocking database limitation: privileged raw SQL
+can insert a fresh target row into an existing proposal, including an approved one. No current
+application method exposes this operation, and no grant execution exists. Before Slice 1.4 can
+consume approvals, add a new migration to seal proposal membership/verify its original scope,
+with adversarial append tests. Do not treat immutable existing target rows as immutable membership.
+`/admin_proposal` supplies an audited private view of stored operation, proposer, targets, total,
+reason, status and expiry so a second operator can inspect the exact intent before approval.
+
+
+### Slice 1.3 local policy approval addendum
+
+The user explicitly approved the proposed local administrator policy and requested continuation.
+This supersedes the pending-policy status above for disposable local testing only. The initial
+operator is Discord user `1047615361886982235`; approval is required above 100 total coins,
+with a 1,000-coin proposal ceiling and a 10,000-coin per-proposer rolling 24-hour ceiling.
+All bulk/global proposals still require another distinct authorized actor. The alert destination
+is local structured logs. There is no grant execution or production authorization.
+
+The ignored local environment now contains these settings and the single bootstrap identity.
+The existing guild `152954629993398272`, tester and channel `455431053528793098` are unchanged.
+No second operator or broader command scope was authorized. A fresh disposable session may
+consume this bootstrap once; no existing database is migrated or reused by this activation.
+Native acceptance, target-membership sealing before Slice 1.4, and public-enable gates remain.

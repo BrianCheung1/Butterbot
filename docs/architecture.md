@@ -8,7 +8,8 @@ and repository, global mutation eligibility adapter, structured operational tele
 composition root. Provisional Slice 1.1 adds an application-owned join transaction and a private
 `/join` adapter alongside `/ping`. Provisional Slice 1.2 adds the private, self-only `/balance`
 query with a deferred transaction snapshot and no writes. There is no economic-value creation, progression,
-inventory, banking, or durable safety/access behavior. Native Linux acceptance remains deferred.
+inventory, or banking. Provisional Slice 1.3 adds durable capabilities, audited inspection,
+proposals and central full freezes. Local safety policy is approved; native acceptance remains pending.
 
 The package direction below remains incremental: only the concrete boundaries needed by Slice
 1.0 and local Slice 1.1 exist, and later feature packages are not pre-scaffolded.

@@ -375,3 +375,13 @@ holds writer ownership. Do not call these SQLite adapters outside that transacti
 The upgrade records hidden missing wallets/projections left by older replacement paths.
 It never creates missing financial state. Such databases upgrade but fail readiness and need
 an independently reviewed recovery. Both previous revisions remain historically unchanged.
+
+## Slice 1.3 schema
+
+Current head `20260922_0004` adds `safety_bootstrap`, `safety_capabilities`,
+`safety_restrictions`, `safety_proposals`, `safety_proposal_targets`, and
+`safety_access_audit`. The frozen release manifest includes every new table/index/trigger.
+UUID/integer checks, proposal state/approval checks, immutable audit/receipt guards and
+replacement rejection are migration-owned. Existing economy/player/transport data is preserved.
+No grant ledger entries or new wallets are created by this migration. Apply migrations with the
+service stopped; old disposable sessions remain historical and are not upgraded by the launcher.

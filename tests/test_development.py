@@ -93,7 +93,7 @@ def test_development_allocates_fresh_database_and_ignores_normal_database_enviro
         connection = sqlite3.connect(database)
         try:
             assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
-                "20260914_0003",
+                "20260922_0004",
             )
             assert connection.execute("SELECT COUNT(*) FROM players").fetchone() == (0,)
         finally:
@@ -102,7 +102,7 @@ def test_development_allocates_fresh_database_and_ignores_normal_database_enviro
 
 async def test_development_syncs_only_test_guild_with_default_intents() -> None:
     settings = DevelopmentSettings("not-used", 123, 456, 789)
-    bot = DevelopmentBot(settings, AsyncMock(), NullOperationsTelemetry(), AsyncMock())
+    bot = DevelopmentBot(settings, AsyncMock(), NullOperationsTelemetry(), AsyncMock(), AsyncMock())
     sync = AsyncMock(return_value=[])
     bot.tree.sync = sync
     try:
@@ -112,6 +112,11 @@ async def test_development_syncs_only_test_guild_with_default_intents() -> None:
             "ping",
             "join",
             "balance",
+            "admin_inspect",
+            "admin_capability",
+            "admin_propose",
+            "admin_approve",
+            "admin_proposal",
         }
         sync.assert_awaited_once()
         assert sync.await_args is not None

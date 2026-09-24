@@ -80,6 +80,8 @@ class JoinService:
             async def apply() -> StableOutcome:
                 if not self._eligibility.evaluate().allowed:
                     return StableOutcome.typed_rejection("players.join_disabled")
+                if await transaction.safety.is_frozen(discord_user_id):
+                    return StableOutcome.typed_rejection("players.join_disabled")
                 player, created = await transaction.players.create_if_absent(
                     player_id=self._id_factory(),
                     discord_user_id=discord_user_id,

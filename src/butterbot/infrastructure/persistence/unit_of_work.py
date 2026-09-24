@@ -18,6 +18,7 @@ from butterbot.infrastructure.persistence.repositories import (
     SqlAlchemyPlayerRepository,
     SqlAlchemyTransportIdempotencyRepository,
 )
+from butterbot.infrastructure.persistence.safety import SqlAlchemySafetyRepository
 from butterbot.infrastructure.persistence.storage import (
     DatabaseIdentityGuard,
     DatabaseIdentityMismatch,
@@ -213,6 +214,7 @@ class SqlAlchemyUnitOfWork:
         self._cleanup_task: asyncio.Task[None] | None = None
         self._phase = TransactionPhase.NEW
         self._aggregates: AggregateCompletenessTracker
+        self.safety: SqlAlchemySafetyRepository
         self.players: SqlAlchemyPlayerRepository
         self.accounts: SqlAlchemyAccountRepository
         self.transport_requests: SqlAlchemyTransportIdempotencyRepository
@@ -246,6 +248,7 @@ class SqlAlchemyUnitOfWork:
             self._phase = TransactionPhase.ACTIVE
             aggregates = AggregateCompletenessTracker()
             self._aggregates = aggregates
+            self.safety = SqlAlchemySafetyRepository(session)
             self.players = SqlAlchemyPlayerRepository(session, aggregates)
             self.accounts = SqlAlchemyAccountRepository(session, aggregates)
             self.transport_requests = SqlAlchemyTransportIdempotencyRepository(session)

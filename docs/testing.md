@@ -227,3 +227,13 @@ repair, unchanged complete database contents, disabled-mutation composition, rea
 and a consistent snapshot across a competing commit. Adapter tests cover private defer/send,
 sanitized errors, cancellation, response loss without retry, and absence of other-player parameters.
 No live Discord interaction or native Linux guarantee is implied by automated local checks.
+
+## Provisional Slice 1.3 validation
+
+Use migrated temporary SQLite databases and synthetic operators/policies. Cover one-time
+bootstrap, revoked authority and role bypass, two-person and threshold/bulk approvals, expiry,
+operation/rolling ceilings, replay after transport deletion, rollback on audit failure, concurrent
+approval, full freeze enforcement at join, balance reads during freeze, and immutable audit even
+with recursive triggers off. Verify private command responses and fail-closed configuration.
+Migration checks must preserve data from prior heads and reject drift in new safety objects.
+Local fixtures do not approve a live operator, policy, destination or native release.

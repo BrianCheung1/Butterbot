@@ -21,6 +21,12 @@ EXPECTED_TABLES = {
     "economy_ledger_postings",
     "operations_transport_requests",
     "operations_integrity_violations",
+    "safety_bootstrap",
+    "safety_capabilities",
+    "safety_restrictions",
+    "safety_proposals",
+    "safety_proposal_targets",
+    "safety_access_audit",
 }
 REPOSITORY_ROOT = Path(__file__).parents[1]
 
@@ -36,7 +42,7 @@ def _alembic_config(database_path: Path) -> Config:
     return config
 
 
-def test_clean_baseline_upgrade_creates_only_slice_1_0_tables(
+def test_clean_upgrade_creates_expected_release_tables(
     migrated_database: Path,
 ) -> None:
     connection = sqlite3.connect(migrated_database)
@@ -66,14 +72,21 @@ def test_baseline_installs_aggregate_completeness_triggers(migrated_database: Pa
                 "SELECT name FROM sqlite_master WHERE type = 'trigger'"
             ).fetchall()
         }
-    assert triggers == set(SQLITE_AGGREGATE_TRIGGER_SQL) | {
-        "trg_players_reject_conflicting_insert",
-        "trg_accounts_reject_conflicting_insert",
-        "trg_balances_reject_conflicting_insert",
-        "trg_players_immutable_identity",
-        "trg_economy_accounts_immutable_identity",
-        "trg_economy_account_balances_immutable_identity",
-    }
+    from butterbot.infrastructure.persistence.release_manifest import RELEASE_SCHEMA_SHA256
+
+    assert triggers == {name for kind, name, _ in RELEASE_SCHEMA_SHA256 if kind == "trigger"}
+    assert (
+        set(SQLITE_AGGREGATE_TRIGGER_SQL)
+        | {
+            "trg_players_reject_conflicting_insert",
+            "trg_accounts_reject_conflicting_insert",
+            "trg_balances_reject_conflicting_insert",
+            "trg_players_immutable_identity",
+            "trg_economy_accounts_immutable_identity",
+            "trg_economy_account_balances_immutable_identity",
+        }
+        <= triggers
+    )
 
 
 def test_baseline_constraints_cover_identity_wallet_and_ledger_integrity(

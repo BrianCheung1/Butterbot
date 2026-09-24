@@ -133,3 +133,14 @@ The accepted initial production operating contract is in
 [docs/operations.md](docs/operations.md). The first production schema and runtime safety checks
 are implemented, but backup/restore provisioning, deployment-host evidence, and public mutations
 remain gated.
+
+
+## Provisional local administrator safety
+
+Slice 1.3 adds durable capabilities, audited `/admin_inspect` and `/admin_proposal`, capability
+assignment/revocation, and freeze/release/grant proposals. `/admin_approve` applies authorized
+restrictions or approves a grant proposal; no coins are issued. All administrative commands are
+private and require durable authority, not Discord roles. `/balance` remains readable during a
+freeze. See `docs/operations.md` for the explicit one-time local bootstrap and configuration.
+The user approved the disposable local operator/limits/logging policy; configuration is kept in
+the ignored local environment. Native Linux release acceptance remains deferred.

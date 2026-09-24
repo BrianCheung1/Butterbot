@@ -195,7 +195,7 @@ async def test_stale_second_revision_cannot_be_stamped_as_current(tmp_path: Path
     path = tmp_path / "stale.db"
     command.upgrade(_config(path), "20260914_0002")
     with closing(sqlite3.connect(path)) as db:
-        db.execute("UPDATE alembic_version SET version_num='20260914_0003'")
+        db.execute("UPDATE alembic_version SET version_num=?", ("20260922_0004",))
         db.commit()
     for check in (create_database_runtime, _verify_database):
         with pytest.raises(DatabaseReadinessError, match="schema contract"):

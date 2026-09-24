@@ -85,6 +85,7 @@ async def run() -> None:
             telemetry=application.telemetry,
             join_service=application.join_service,
             balance_service=application.balance_service,
+            safety_service=application.safety_service,
         )
         await serve_until_shutdown(bot, settings.discord_token)
     finally:

@@ -509,3 +509,33 @@ Test `/balance` before joining (private invitation), `/join`, `/balance` (zero c
 again (existing wallet). The normal disabled mutation setting does not deny safe balance reads.
 Native acceptance and public-enable prerequisites above remain outstanding. No live data migration
 or production deployment is authorized by this development exception.
+
+## Provisional local Slice 1.3 operation
+
+Before live bootstrap, approve operator Discord identities, approval threshold, total proposal
+ceiling, per-proposer rolling 24-hour ceiling and alert destination. Suggested values in the
+conversation are not approval. Configure all `BUTTERBOT_SAFETY_*` example fields explicitly;
+missing policy leaves proposals unavailable. The supported provisional sink is `local_log`.
+Production alert routing and native deployment validation are still required before release.
+
+Normal composition loads durable authority but never creates operators from configuration.
+For a newly allocated development session only, `BUTTERBOT_DEV_SAFETY_BOOTSTRAP_IDS` is an
+explicit comma-separated list consumed once for that database. Repeated bootstrap never restores
+revoked capabilities. A stopped-service local maintenance command is also available:
+
+```text
+python -m butterbot.discord_app.safety_bootstrap --database ABSOLUTE_DISPOSABLE_DATABASE_PATH --operator APPROVED_USER_ID --approval-threshold APPROVED_THRESHOLD --operation-ceiling APPROVED_TOTAL --rolling-ceiling APPROVED_24H_TOTAL --alert-destination local_log
+```
+
+It opens only existing canonical storage under `data/discord-development`, obtains exclusive
+runtime ownership, and performs one audited transaction. It does not migrate or accept production
+storage. Stop the bot first. Do not invoke it with unreviewed operators or invented policy.
+
+`/admin_inspect` privately reads an explicitly selected user with a mandatory reason and audit.
+`/admin_capability` grants/revokes one capability; `/admin_propose` accepts freeze/release/grant,
+comma-separated user IDs (or global for restrictions), a reason and a grant amount per target.
+`/admin_proposal` privately shows the stored proposal with an audit; inspect it before using
+`/admin_approve`, which requires another authorized operator for pending work. All responses are private.
+There is no grant execution command. Global and multi-user restrictions require a second operator;
+use the deployment mutation switch or stop the service for an immediate single-operator incident
+stop. Never silently broaden the development command allowlist to make two-person tests pass.
