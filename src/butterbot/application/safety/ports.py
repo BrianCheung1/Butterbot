@@ -32,6 +32,7 @@ class Proposal:
     requires_approval: bool
     status: str
     approver_id: int | None = None
+    scope_verified: bool = False
 
 
 class SafetyRepository(Protocol):

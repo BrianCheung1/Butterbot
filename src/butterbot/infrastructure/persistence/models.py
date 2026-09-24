@@ -478,3 +478,22 @@ class AccessAuditModel(Base):
     proposal_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
     reason: Mapped[str] = mapped_column(String(256))
     created_at_ms: Mapped[int] = mapped_column(BigInteger)
+
+
+class ProposalScopeModel(Base):
+    __tablename__ = "safety_proposal_scopes"
+    __table_args__ = (
+        CheckConstraint("scope_verified IN (0,1)", name="ck_safety_scope_verified"),
+        CheckConstraint(
+            "target_count >= 0 AND (scope_verified=0 OR target_count BETWEEN 1 AND 25)",
+            name="ck_safety_scope_count",
+        ),
+        _sqlite_uuid("proposal_id"),
+        _sqlite_integer("target_count"),
+        _sqlite_integer("scope_verified"),
+    )
+    proposal_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("safety_proposals.id", ondelete="RESTRICT"), primary_key=True
+    )
+    target_count: Mapped[int] = mapped_column(BigInteger)
+    scope_verified: Mapped[int] = mapped_column(BigInteger)

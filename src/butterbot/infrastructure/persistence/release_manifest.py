@@ -1,4 +1,4 @@
-"""Frozen case-sensitive schema fingerprints for release 20260922_0004."""
+"""Frozen case-sensitive schema fingerprints for release 20260924_0005."""
 
 RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     (
@@ -226,4 +226,44 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
         "trg_safety_proposals_transition",
         "safety_proposals",
     ): "f2b9d95e93132c360c0916113082461eb478e8459f2bdb55f7818317a4d7bca4",
+    (
+        "table",
+        "safety_proposal_scopes",
+        "safety_proposal_scopes",
+    ): "0b4aaed17796f345f3b082b9a26905486b026b652e31daad458a23f60030d2d2",
+    (
+        "trigger",
+        "trg_safety_proposal_initial_state",
+        "safety_proposals",
+    ): "58fab1aff6ad183a62b70131850b9e1fce1fa3f8a6eb6c53390664a65df7a08f",
+    (
+        "trigger",
+        "trg_safety_proposal_require_scope",
+        "safety_proposals",
+    ): "46d333ef4d1b045f07d4d7b994515db038250815d74f8e617e74ddaa5b3b67da",
+    (
+        "trigger",
+        "trg_safety_scope_no_delete",
+        "safety_proposal_scopes",
+    ): "069e2f7a317cb0b55e5487e0d53e4641a9eb0b3e53479638d7dc61f5a231a544",
+    (
+        "trigger",
+        "trg_safety_scope_no_replace",
+        "safety_proposal_scopes",
+    ): "88515a20dafe6a163d2f57553b3b8737cd67b0f628662205abfe160892400c20",
+    (
+        "trigger",
+        "trg_safety_scope_no_update",
+        "safety_proposal_scopes",
+    ): "ac987cca1944be8021baf6f3a4ebff68c374516daad16f7c834af2b91861cb12",
+    (
+        "trigger",
+        "trg_safety_scope_validate",
+        "safety_proposal_scopes",
+    ): "3d844cd00b7fd5cb66fa583dffc3fcb6f2a9709e0e39b830f4d4a1d2e05a54a8",
+    (
+        "trigger",
+        "trg_safety_targets_sealed",
+        "safety_proposal_targets",
+    ): "2810b294188d52975b5d7919dbd02d653ea9885d1f61c60bff692fba1070bc25",
 }

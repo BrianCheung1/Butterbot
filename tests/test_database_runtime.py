@@ -498,7 +498,7 @@ async def test_shutdown_retains_captured_owner_after_unit_of_work_exit(
 
 
 def test_expected_schema_revision_is_release_head() -> None:
-    assert EXPECTED_SCHEMA_REVISION == "20260922_0004"
+    assert EXPECTED_SCHEMA_REVISION == "20260924_0005"
 
 
 async def test_shutdown_timeout_cancels_and_awaits_active_transaction_owner(

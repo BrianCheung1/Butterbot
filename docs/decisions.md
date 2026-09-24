@@ -795,3 +795,21 @@ The existing guild `152954629993398272`, tester and channel `455431053528793098`
 No second operator or broader command scope was authorized. A fresh disposable session may
 consume this bootstrap once; no existing database is migrated or reused by this activation.
 Native acceptance, target-membership sealing before Slice 1.4, and public-enable gates remain.
+
+
+### 2026-09-24: Proposal scope sealing (20260924_0005)
+
+New proposals insert pending facts, all targets and an immutable verified scope seal in one
+transaction. Sealed membership rejects target append, including SQLite conflict variants with
+recursive triggers disabled. Status transitions require a verified seal and exact target count.
+Seal update/delete/replacement is forbidden; a seal failure rolls back the whole submission.
+
+Existing proposal facts, targets, statuses and audits remain unchanged. Their observed scope is
+sealed as unverified because prior approved intent cannot safely be reconstructed. Submit a new
+proposal for further approval; private previews expose verification status. Historical receipt
+replay can return historical approved/applied status without new effects. Future grant execution
+must verify current scope inside its transaction and never trust a cached result.
+
+Prior migrations are unchanged. Restart disposable development to allocate new storage; this
+source change does not migrate running sessions. Grants remain unimplemented. Native Linux is
+still deferred and formal release acceptance remains FAIL.

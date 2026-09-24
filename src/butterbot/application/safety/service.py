@@ -29,6 +29,7 @@ Status = Literal[
     "limit",
     "frozen",
     "unconfigured",
+    "unverified_scope",
 ]
 _STATUSES = {
     "applied",
@@ -42,6 +43,7 @@ _STATUSES = {
     "limit",
     "frozen",
     "unconfigured",
+    "unverified_scope",
 }
 
 
@@ -441,6 +443,8 @@ class SafetyService:
             proposal = await tx.safety.get_proposal(proposal_id)
             if proposal is None:
                 return "unavailable"
+            if not proposal.scope_verified:
+                return "unverified_scope"
             if proposal.actor_id == actor_id:
                 return "self_approval"
             if proposal.status != "pending":

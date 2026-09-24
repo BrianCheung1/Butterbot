@@ -9,6 +9,7 @@ from butterbot.infrastructure.persistence.models import (
     AccessAuditModel,
     CapabilityModel,
     ProposalModel,
+    ProposalScopeModel,
     ProposalTargetModel,
     RestrictionModel,
     SafetyBootstrapModel,
@@ -84,6 +85,12 @@ class SqlAlchemySafetyRepository:
         for target in proposal.targets:
             self._session.add(ProposalTargetModel(proposal_id=proposal.id, target_id=target))
         await self._session.flush()
+        self._session.add(
+            ProposalScopeModel(
+                proposal_id=proposal.id, target_count=len(proposal.targets), scope_verified=1
+            )
+        )
+        await self._session.flush()
 
     async def get_proposal(self, proposal_id: UUID) -> Proposal | None:
         row = await self._session.get(ProposalModel, proposal_id)
@@ -95,6 +102,10 @@ class SqlAlchemySafetyRepository:
                 .where(ProposalTargetModel.proposal_id == proposal_id)
                 .order_by(ProposalTargetModel.target_id)
             )
+        )
+        scope = await self._session.get(ProposalScopeModel, proposal_id)
+        verified = (
+            scope is not None and scope.scope_verified == 1 and scope.target_count == len(targets)
         )
         return Proposal(
             row.id,
@@ -108,6 +119,7 @@ class SqlAlchemySafetyRepository:
             bool(row.requires_approval),
             row.status,
             row.approver_id,
+            verified,
         )
 
     async def finish_proposal(
@@ -116,6 +128,9 @@ class SqlAlchemySafetyRepository:
         row = await self._session.get(ProposalModel, proposal_id)
         if row is None or row.status != "pending":
             raise RuntimeError("proposal is not pending")
+        scope = await self._session.get(ProposalScopeModel, proposal_id)
+        if scope is None or scope.scope_verified != 1:
+            raise RuntimeError("proposal has no verified scope")
         row.approver_id = approver_id
         row.status = status
         await self._session.flush()

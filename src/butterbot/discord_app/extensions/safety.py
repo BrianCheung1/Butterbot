@@ -50,12 +50,18 @@ class Safety(commands.Cog):
                         )
                         message = (
                             f"Proposal: {proposal.id}\nStatus: {proposal.status}\n"
+                            f"Scope verified: {proposal.scope_verified}\n"
                             f"Proposer: {proposal.actor_id}\nOperation: {proposal.operation}\n"
                             f"Targets: {target_text}\nCoins per target: {proposal.amount:,}\n"
                             f"Total coins: {proposal.amount * len(proposal.targets):,}\n"
                             f"Second approval required: {proposal.requires_approval}\n"
                             f"Expires: <t:{proposal.expires_at_ms // 1000}:f>\n"
                             f"Reason: {discord.utils.escape_markdown(proposal.reason)}"
+                            + (
+                                ""
+                                if proposal.scope_verified
+                                else "\nLegacy/unverified scope: submit a new proposal."
+                            )
                         )
                 elif isinstance(result, InspectionResult):
                     message = (

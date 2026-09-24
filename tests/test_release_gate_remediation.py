@@ -224,7 +224,7 @@ async def test_same_head_with_baseline_shape_rejected(tmp_path: Path) -> None:
     config.set_main_option("sqlalchemy.url", "sqlite:///" + path.as_posix())
     command.upgrade(config, "20260825_0001")
     with closing(sqlite3.connect(path)) as db:
-        db.execute("UPDATE alembic_version SET version_num=?", ("20260922_0004",))
+        db.execute("UPDATE alembic_version SET version_num=?", ("20260924_0005",))
         db.commit()
     for check in (create_database_runtime, verification._verify_database):
         with pytest.raises(DatabaseReadinessError, match="schema contract"):

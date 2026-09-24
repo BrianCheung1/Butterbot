@@ -26,6 +26,7 @@ EXPECTED_TABLES = {
     "safety_restrictions",
     "safety_proposals",
     "safety_proposal_targets",
+    "safety_proposal_scopes",
     "safety_access_audit",
 }
 REPOSITORY_ROOT = Path(__file__).parents[1]

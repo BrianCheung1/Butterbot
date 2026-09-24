@@ -11,7 +11,9 @@ from butterbot.infrastructure.persistence.database import create_database_runtim
 from butterbot.infrastructure.persistence.readiness import EXPECTED_SCHEMA_REVISION
 
 
-@pytest.mark.parametrize("prior", ["20260825_0001", "20260914_0002", "20260914_0003"])
+@pytest.mark.parametrize(
+    "prior", ["20260825_0001", "20260914_0002", "20260914_0003", "20260922_0004"]
+)
 async def test_safety_upgrade_preserves_existing_aggregate_and_transport(
     prior: str, tmp_path: Path
 ) -> None:
