@@ -813,3 +813,46 @@ must verify current scope inside its transaction and never trust a cached result
 Prior migrations are unchanged. Restart disposable development to allocate new storage; this
 source change does not migrate running sessions. Grants remain unimplemented. Native Linux is
 still deferred and formal release acceptance remains FAIL.
+
+
+### 2026-09-27: Provisional local audited grants (Slice 1.4)
+
+The user requested continuation into local grant execution after the independent proposal-seal
+PASS. Native production acceptance remains deferred and FAIL. This exception opens only local
+Slice 1.4; no public mutation or subsequent slice is authorized by implementation alone.
+
+The original proposer, still holding grants.propose, may explicitly execute their own approved,
+verified grant with /admin_execute_grant. This capability authorizes the full proposer workflow;
+it does not allow executing another operator's proposal. There is no balance setter, arbitrary
+amount at execution, or implicit execution on approval. /admin_proposal is the bounded preview
+of exact sealed targets and total before execution and exposes whether execution already occurred.
+An execution is permanently unique by proposal ID, independently of Discord interaction retention.
+Separate proposals represent separate operator intent; a separate bulk campaign workflow is absent.
+
+Execution rechecks current global mutation eligibility, durable proposer authority, verified scope,
+approval, active targets, freezes, expiry, current per-operation ceiling, current second-approval
+requirement and current approver authority. The stricter of stored approval requirement and current
+threshold/bulk requirement applies. The clock is sampled after writer acquisition. Actual execution
+amounts over (now - 24h, now] are limited per proposer; future-dated rows count conservatively if the
+clock regresses. This is additional to proposal-time reservation limits. Python integer arithmetic
+checks total, projection and version bounds; all target wallets are validated before money writes.
+
+One transaction credits wallets, debits issuance.admin, writes balanced immutable postings,
+per-target before/after references, a unique execution receipt, access audit and transport outcome.
+No targets are joined or repaired by grants. The issuance account is lazily created at zero and
+never reset. Guarded projections check prior amount and version. No ledger row status is added;
+proposal approval and immutable execution records remain separate workflow facts.
+
+Revision 0006 adds grant receipts and SQLite sealed-ledger guards. Direct adversarial testing
+found an incoming UPDATE OR REPLACE bypass; forward revision 0007 guards destination identity
+and correlation as well as old identity. 0001 through 0006 remain frozen after application.
+The failed probes and independent reproduction are retained. No live data was upgraded through
+0006 or issued grants during this work. These guards protect executed grants, not arbitrary legacy
+unsealed ledger data; migration does not certify or repair old monetary history.
+
+Local policy and the single tester/server/channel are unchanged: second approval above 100 coins
+or for bulk, 1000 per proposal, 10000 per proposer/24h, local structured alerts. Live bulk testing
+remains unavailable without an explicitly authorized second tester. Production still requires
+native evidence, operational acceptance and reliable alerts. Reconciliation tests compare each
+posting sum to its projection and minted supply to wallets; the existing offline row-shape verifier
+is not represented as a comprehensive monetary reconciler.

@@ -12,7 +12,15 @@ from butterbot.infrastructure.persistence.readiness import EXPECTED_SCHEMA_REVIS
 
 
 @pytest.mark.parametrize(
-    "prior", ["20260825_0001", "20260914_0002", "20260914_0003", "20260922_0004"]
+    "prior",
+    [
+        "20260825_0001",
+        "20260914_0002",
+        "20260914_0003",
+        "20260922_0004",
+        "20260924_0005",
+        "20260927_0006",
+    ],
 )
 async def test_safety_upgrade_preserves_existing_aggregate_and_transport(
     prior: str, tmp_path: Path

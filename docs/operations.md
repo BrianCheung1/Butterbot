@@ -536,7 +536,8 @@ storage. Stop the bot first. Do not invoke it with unreviewed operators or inven
 comma-separated user IDs (or global for restrictions), a reason and a grant amount per target.
 `/admin_proposal` privately shows the stored proposal with an audit; inspect it before using
 `/admin_approve`, which requires another authorized operator for pending work. All responses are private.
-There is no grant execution command. Global and multi-user restrictions require a second operator;
+The original proposer can explicitly execute an approved grant with `/admin_execute_grant`.
+Global and multi-user restrictions require a second operator;
 use the deployment mutation switch or stop the service for an immediate single-operator incident
 stop. Never silently broaden the development command allowlist to make two-person tests pass.
 
@@ -557,3 +558,15 @@ must verify current scope inside its transaction and never trust a cached result
 Prior migrations are unchanged. Restart disposable development to allocate new storage; this
 source change does not migrate running sessions. Grants remain unimplemented. Native Linux is
 still deferred and formal release acceptance remains FAIL.
+
+
+### Local Slice 1.4 workflow
+
+Restart disposable development after the reviewed upgrade to allocate a fresh empty database.
+Use /join, then /admin_propose operation:grant with your numeric user ID, amount and reason.
+Inspect /admin_proposal; an approved single-target proposal within the threshold can be passed
+to /admin_execute_grant by its original proposer. Confirm /balance and the executed flag in the
+proposal preview. Repeating execution of the same proposal must not add coins. Different proposal
+IDs represent different intent. Multi-target or above-threshold work still requires a distinct
+currently authorized approver; do not broaden the configured command scope to bypass that rule.
+Historical success replay does not mean new money was issued. No production database is used.

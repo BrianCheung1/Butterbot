@@ -51,6 +51,7 @@ class Safety(commands.Cog):
                         message = (
                             f"Proposal: {proposal.id}\nStatus: {proposal.status}\n"
                             f"Scope verified: {proposal.scope_verified}\n"
+                            f"Grant executed: {result.grant_executed}\n"
                             f"Proposer: {proposal.actor_id}\nOperation: {proposal.operation}\n"
                             f"Targets: {target_text}\nCoins per target: {proposal.amount:,}\n"
                             f"Total coins: {proposal.amount * len(proposal.targets):,}\n"
@@ -75,7 +76,7 @@ class Safety(commands.Cog):
                     if result.proposal_id is not None:
                         message += f" Proposal: {result.proposal_id}."
                     if result.status == "approved":
-                        message += " No coins issued; grant execution is not implemented."
+                        message += " No coins issued; execute the approved proposal separately."
             except (ValueError, TypeError):
                 outcome = "invalid"
                 message = "Invalid input. Use valid IDs, a supported operation, and a short reason."
@@ -136,7 +137,8 @@ class Safety(commands.Cog):
         )
 
     @app_commands.command(
-        name="admin_propose", description="Propose a freeze, release, or non-executing grant."
+        name="admin_propose",
+        description="Propose a freeze, release, or grant for separate execution.",
     )
     @app_commands.describe(
         targets="Comma-separated Discord user IDs (max 25), or global for full freeze/release",
@@ -198,6 +200,19 @@ class Safety(commands.Cog):
             )
 
         await self._respond(interaction, "admin_approve", execute)
+
+    @app_commands.command(
+        name="admin_execute_grant", description="Execute your approved coin grant once."
+    )
+    async def execute_grant(self, interaction: discord.Interaction, proposal: str) -> None:
+        async def execute() -> SafetyResult:
+            return await self._service.execute_grant(
+                actor_id=interaction.user.id,
+                proposal_id=UUID(proposal),
+                interaction_id=interaction.id,
+            )
+
+        await self._respond(interaction, "admin_execute_grant", execute)
 
 
 class _SafetyBot(Protocol):

@@ -181,6 +181,7 @@ async def run_development(settings: DevelopmentSettings) -> None:
             id_factory=uuid4,
             alert=local_safety_alert,
             runtime_safety=database.storage_monitor,
+            grant_eligibility=eligibility,
         )
         if operators:
             await safety_service.bootstrap(operators)

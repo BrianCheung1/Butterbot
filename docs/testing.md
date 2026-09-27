@@ -237,3 +237,15 @@ approval, full freeze enforcement at join, balance reads during freeze, and immu
 with recursive triggers off. Verify private command responses and fail-closed configuration.
 Migration checks must preserve data from prior heads and reject drift in new safety objects.
 Local fixtures do not approve a live operator, policy, destination or native release.
+
+
+## Provisional Slice 1.4 validation
+
+Real SQLite grant tests must reconcile issuance/wallet postings and projections, immutable receipts,
+exactly-once proposal identity across concurrent and expired transport requests, execution-time
+rolling ceilings including cutoff and competition, current approval/authority/freeze/expiry policy,
+invalid and missing targets without repair, integer/version overflow, migration preservation,
+rollback/cancellation after partial money writes, and response/alert loss after commit. Adversarial
+SQL tests cover INSERT/UPDATE conflict replacement, destination identity/correlation, and append
+with recursive triggers on/off. The grant adapter privately defers before service invocation.
+Independent review and all repository checks precede local acceptance; native production remains FAIL.

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 from uuid import NAMESPACE_URL, UUID, uuid5
 
+from butterbot.application.economy.grants import execute_grant
 from butterbot.application.exact_integer import checked_add_int64, require_int64
 from butterbot.application.operations.idempotency import (
     FingerprintConflict,
@@ -10,12 +11,17 @@ from butterbot.application.operations.idempotency import (
     TransportRequest,
     request_fingerprint,
 )
-from butterbot.application.operations.mutation_eligibility import RuntimeSafety
+from butterbot.application.operations.mutation_eligibility import MutationEligibility, RuntimeSafety
 from butterbot.application.operations.ports import JsonValue, StableOutcome, TransportActor
 from butterbot.application.safety.ports import CAPABILITIES, Capability, Operation, Proposal
 from butterbot.application.transactions import ApplicationTransactionRunner, UnitOfWork
 
-SAFETY_NAMESPACES = ("safety.capability", "safety.propose", "safety.approve")
+SAFETY_NAMESPACES = (
+    "safety.capability",
+    "safety.propose",
+    "safety.approve",
+    "safety.execute_grant",
+)
 DAY_MS = 86_400_000
 Status = Literal[
     "applied",
@@ -30,6 +36,9 @@ Status = Literal[
     "frozen",
     "unconfigured",
     "unverified_scope",
+    "executed",
+    "already_executed",
+    "approval_required",
 ]
 _STATUSES = {
     "applied",
@@ -44,6 +53,9 @@ _STATUSES = {
     "frozen",
     "unconfigured",
     "unverified_scope",
+    "executed",
+    "already_executed",
+    "approval_required",
 }
 
 
@@ -79,6 +91,7 @@ class InspectionResult:
 class ProposalView:
     status: str
     proposal: Proposal | None = None
+    grant_executed: bool = False
 
 
 def proposal_identity(interaction_id: int) -> UUID:
@@ -108,6 +121,7 @@ class SafetyService:
         id_factory: Callable[[], UUID],
         alert: Callable[[str, UUID], None],
         runtime_safety: RuntimeSafety | None = None,
+        grant_eligibility: MutationEligibility | None = None,
     ) -> None:
         self._transactions = transactions
         self._idempotency = idempotency
@@ -116,6 +130,7 @@ class SafetyService:
         self._id_factory = id_factory
         self._alert = alert
         self._runtime_safety = runtime_safety
+        self._grant_eligibility = grant_eligibility
 
     def _now(self) -> int:
         now = self._clock_ms()
@@ -185,6 +200,10 @@ class SafetyService:
         async def execute(tx: UnitOfWork) -> SafetyResult:
             if self._runtime_safety is not None and not self._runtime_safety.is_safe():
                 return SafetyResult("unavailable")
+            if namespace == "safety.execute_grant" and (
+                self._grant_eligibility is None or not self._grant_eligibility.evaluate().allowed
+            ):
+                return SafetyResult("unavailable")
             # Recheck authority before replay; cached success cannot restore revoked access.
             if not await tx.safety.has_capability(actor_id, capability):
                 await self._audit(tx, actor_id, "denied", "missing durable capability", now)
@@ -213,7 +232,7 @@ class SafetyService:
                     )
                 return (
                     StableOutcome.success(f"safety.{status}")
-                    if status in {"applied", "pending", "approved"}
+                    if status in {"applied", "pending", "approved", "executed", "already_executed"}
                     else StableOutcome.typed_rejection(f"safety.{status}")
                 )
 
@@ -223,7 +242,9 @@ class SafetyService:
             outcome = execution.outcome
             status = outcome.code.removeprefix("safety.")
             expected_kind = (
-                "success" if status in {"applied", "pending", "approved"} else "typed_rejection"
+                "success"
+                if status in {"applied", "pending", "approved", "executed", "already_executed"}
+                else "typed_rejection"
             )
             if (
                 outcome.code != f"safety.{status}"
@@ -428,7 +449,13 @@ class SafetyService:
             await self._audit(
                 tx, actor_id, "proposal.inspect", "approval review", now, proposal=proposal_id
             )
-            return ProposalView("available" if proposal is not None else "unavailable", proposal)
+            return ProposalView(
+                "available" if proposal is not None else "unavailable",
+                proposal,
+                await tx.grants.executed(proposal_id)
+                if proposal is not None and proposal.operation == "grant"
+                else False,
+            )
 
         return await self._transactions.run("safety.proposal_inspect", execute)
 
@@ -478,5 +505,44 @@ class SafetyService:
             capability="proposals.approve",
             semantic={"proposal": str(proposal_id)},
             now=now,
+            body=apply,
+        )
+
+    async def execute_grant(
+        self, *, actor_id: int, proposal_id: UUID, interaction_id: int
+    ) -> SafetyResult:
+        if type(proposal_id) is not UUID:
+            raise ValueError("proposal identity must be a UUID")
+
+        async def apply(tx: UnitOfWork) -> Status:
+            # Sample again after writer acquisition/retries so expiry and rolling limits
+            # are evaluated at execution rather than arrival in the queue.
+            now = self._now()
+            status = await execute_grant(
+                tx,
+                actor_id=actor_id,
+                proposal_id=proposal_id,
+                interaction_id=interaction_id,
+                transaction_id=self._id_factory(),
+                now=now,
+                policy=self._policy,
+            )
+            await self._audit(
+                tx,
+                actor_id,
+                f"grant.{status}",
+                "execute sealed grant proposal",
+                now,
+                proposal=proposal_id,
+            )
+            return status
+
+        return await self._mutate(
+            actor_id=actor_id,
+            interaction_id=interaction_id,
+            namespace="safety.execute_grant",
+            capability="grants.propose",
+            semantic={"proposal": str(proposal_id)},
+            now=self._now(),
             body=apply,
         )

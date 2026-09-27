@@ -12,6 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 
 from butterbot.application.operations.telemetry import emit_operational_telemetry
+from butterbot.infrastructure.persistence.grants import SqlAlchemyGrantRepository
 from butterbot.infrastructure.persistence.repositories import (
     AggregateCompletenessTracker,
     SqlAlchemyAccountRepository,
@@ -214,6 +215,7 @@ class SqlAlchemyUnitOfWork:
         self._cleanup_task: asyncio.Task[None] | None = None
         self._phase = TransactionPhase.NEW
         self._aggregates: AggregateCompletenessTracker
+        self.grants: SqlAlchemyGrantRepository
         self.safety: SqlAlchemySafetyRepository
         self.players: SqlAlchemyPlayerRepository
         self.accounts: SqlAlchemyAccountRepository
@@ -248,6 +250,7 @@ class SqlAlchemyUnitOfWork:
             self._phase = TransactionPhase.ACTIVE
             aggregates = AggregateCompletenessTracker()
             self._aggregates = aggregates
+            self.grants = SqlAlchemyGrantRepository(session, aggregates)
             self.safety = SqlAlchemySafetyRepository(session)
             self.players = SqlAlchemyPlayerRepository(session, aggregates)
             self.accounts = SqlAlchemyAccountRepository(session, aggregates)

@@ -497,3 +497,53 @@ class ProposalScopeModel(Base):
     )
     target_count: Mapped[int] = mapped_column(BigInteger)
     scope_verified: Mapped[int] = mapped_column(BigInteger)
+
+
+class GrantExecutionModel(Base):
+    __tablename__ = "economy_grant_executions"
+    __table_args__ = (
+        _sqlite_uuid("proposal_id"),
+        _sqlite_uuid("transaction_id"),
+        _sqlite_integer("actor_id"),
+        _sqlite_integer("executed_at_ms"),
+        _sqlite_integer("total"),
+        CheckConstraint(
+            "actor_id > 0 AND executed_at_ms >= 0 AND total > 0", name="ck_grant_execution_values"
+        ),
+        UniqueConstraint("transaction_id", name="uq_grant_execution_transaction"),
+        Index("ix_grant_execution_actor_time", "actor_id", "executed_at_ms"),
+    )
+    proposal_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("safety_proposals.id", ondelete="RESTRICT"), primary_key=True
+    )
+    transaction_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_ledger_transactions.id", ondelete="RESTRICT")
+    )
+    actor_id: Mapped[int] = mapped_column(BigInteger)
+    executed_at_ms: Mapped[int] = mapped_column(BigInteger)
+    total: Mapped[int] = mapped_column(BigInteger)
+
+
+class GrantTargetModel(Base):
+    __tablename__ = "economy_grant_targets"
+    __table_args__ = (
+        _sqlite_uuid("proposal_id"),
+        _sqlite_uuid("account_id"),
+        _sqlite_integer("target_id"),
+        _sqlite_integer("before_amount"),
+        _sqlite_integer("after_amount"),
+        CheckConstraint(
+            "target_id > 0 AND before_amount >= 0 AND after_amount > before_amount",
+            name="ck_grant_target_values",
+        ),
+        UniqueConstraint("proposal_id", "target_id", name="uq_grant_target_identity"),
+    )
+    proposal_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("safety_proposals.id", ondelete="RESTRICT"), primary_key=True
+    )
+    account_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_accounts.id", ondelete="RESTRICT"), primary_key=True
+    )
+    target_id: Mapped[int] = mapped_column(BigInteger)
+    before_amount: Mapped[int] = mapped_column(BigInteger)
+    after_amount: Mapped[int] = mapped_column(BigInteger)

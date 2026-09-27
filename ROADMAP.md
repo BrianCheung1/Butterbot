@@ -63,7 +63,9 @@ local development exception through administrator capabilities, proposals, inspe
 restrictions only. Operator identities, numerical ceilings and alert destination require explicit
 approval before live bootstrap or slice completion; the user subsequently approved the proposed
 local policy (see the approval addendum in docs/decisions.md).
-Earlier native FAIL verdicts remain in force. No Slice 1.4 or production use is authorized.
+Earlier native FAIL verdicts remain in force. The user's 2026-09-27 continuation authorizes
+provisional local Slice 1.4 after the reviewed proposal-sealing fix. Production is not authorized;
+local implementation and independent review do not substitute for native acceptance.
 
 Implementation completion is not gate acceptance. Passing existing tests is evidence, not proof
 that a slice is safe to depend on. A review must not be limited to known findings, existing tests,
@@ -227,6 +229,9 @@ numeric ceilings and alert destinations before completion. Test Discord-role byp
 self-approval rejection, capability revocation, audit immutability, and full-freeze coverage.
 
 ### Slice 1.4: Audited grant — depends on 1.3, Spine
+
+Status: `IN REVIEW` for provisional local use. Final independent acceptance is pending;
+production remains blocked by native acceptance. See `docs/reviews/slice-1-4-local-report.md`.
 
 An authorized operator grants coins using `issuance.admin`, a reason, transport key, and unique
 `(campaign, target)` or proposal identity. This proves posting polarity, balance projection,

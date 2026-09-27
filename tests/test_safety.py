@@ -14,6 +14,7 @@ from butterbot.application.operations.idempotency import (
     TransportIdempotencyCoordinator,
     discord_retention_registry,
 )
+from butterbot.application.operations.mutation_eligibility import MutationEligibility
 from butterbot.application.safety.ports import Capability, Operation
 from butterbot.application.safety.service import (
     DAY_MS,
@@ -33,6 +34,7 @@ def service(
     *,
     now: int = 1000,
     policy: SafetyPolicy | None = TEST_POLICY,
+    grant_eligibility: MutationEligibility | None = None,
 ) -> SafetyService:
     telemetry = NullOperationsTelemetry()
     return SafetyService(
@@ -43,6 +45,7 @@ def service(
             discord_retention_registry(*SAFETY_NAMESPACES), telemetry=telemetry
         ),
         policy=policy,
+        grant_eligibility=grant_eligibility,
         clock_ms=lambda: now,
         id_factory=uuid4,
         alert=lambda action, audit: None,

@@ -144,6 +144,7 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
             id_factory=uuid4,
             alert=local_safety_alert,
             runtime_safety=database.storage_monitor,
+            grant_eligibility=eligibility,
         ),
         balance_service=BalanceService(database.unit_of_work_factory.read_snapshot),
         join_service=JoinService(

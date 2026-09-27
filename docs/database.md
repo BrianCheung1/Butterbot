@@ -403,3 +403,15 @@ must verify current scope inside its transaction and never trust a cached result
 Prior migrations are unchanged. Restart disposable development to allocate new storage; this
 source change does not migrate running sessions. Grants remain unimplemented. Native Linux is
 still deferred and formal release acceptance remains FAIL.
+
+
+### Audited grant persistence (20260927_0006 and 0007)
+
+`economy_grant_executions` permanently binds one proposal to one ledger transaction, actor,
+execution time and total; its actor/time index supports rolling execution limits.
+`economy_grant_targets` stores immutable per-wallet before/after amounts and target identities.
+A validated execution seals these receipts and all associated ledger postings/metadata. Incoming
+updates, conflict replacement and subsequent posting/target appends are rejected, including with
+SQLite recursive triggers disabled. Historical proposals and existing balances are not modified
+by either upgrade. The application must establish balanced postings, authority and policy in the
+same transaction; SQLite guards are additional integrity protection, not operator authorization.

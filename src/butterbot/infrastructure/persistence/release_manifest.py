@@ -1,4 +1,4 @@
-"""Frozen case-sensitive schema fingerprints for release 20260924_0005."""
+"""Frozen schema fingerprints for release 20260927_0007."""
 
 RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     (
@@ -266,4 +266,99 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
         "trg_safety_targets_sealed",
         "safety_proposal_targets",
     ): "2810b294188d52975b5d7919dbd02d653ea9885d1f61c60bff692fba1070bc25",
+    (
+        "table",
+        "economy_grant_executions",
+        "economy_grant_executions",
+    ): "8825fbf9c2be46bac041be2b4c860cfec03b8d01f5d0dd18764fe4be8c352d9d",
+    (
+        "index",
+        "ix_grant_execution_actor_time",
+        "economy_grant_executions",
+    ): "4cc9f3b1990f2e08eb213c323fa4998d9d6b1df5ef973e02f38be9328b69b51f",
+    (
+        "table",
+        "economy_grant_targets",
+        "economy_grant_targets",
+    ): "4996e23e7bb50e5d2b065afd5b0c09efb3771bfe18d39d9bf6444aea2ffaee25",
+    (
+        "trigger",
+        "trg_economy_grant_executions_update",
+        "economy_grant_executions",
+    ): "0642eb7223bb45da469b10cd7b37422a8c5875c5d0374b1fb8e1096902a72471",
+    (
+        "trigger",
+        "trg_economy_grant_executions_delete",
+        "economy_grant_executions",
+    ): "e4fdcb93c62b5483025980619008af2b75ca22cdacf5a5922bc8a86f9d1063f3",
+    (
+        "trigger",
+        "trg_economy_grant_executions_replace",
+        "economy_grant_executions",
+    ): "0056ed50f93c31b07e7d2921aef3d98cd385ebbf6cba07c46a7699c95193f142",
+    (
+        "trigger",
+        "trg_economy_grant_targets_update",
+        "economy_grant_targets",
+    ): "b1085a2b0e80e8017bc402eab83c64504c7a0c50f48f7ffee3d5b4e68ccb463d",
+    (
+        "trigger",
+        "trg_economy_grant_targets_delete",
+        "economy_grant_targets",
+    ): "8889afd55dd339dcbe1263baff2ed04277c3b1ce852e5f0f7e67bc2d6b75012f",
+    (
+        "trigger",
+        "trg_economy_grant_targets_replace",
+        "economy_grant_targets",
+    ): "87a1f041a05eb884ff9e6f2224b72455861d1e0e921f6cd393e9e4b21234df6d",
+    (
+        "trigger",
+        "trg_grant_targets_sealed",
+        "economy_grant_targets",
+    ): "9ce248fb34b400c20ee21f02be48d3a2e60abe1c432326bb81019c3d5a5e8b48",
+    (
+        "trigger",
+        "trg_grant_ledger_update",
+        "economy_ledger_transactions",
+    ): "2958c4adedee1b0f7094fa942c9ba5b0ca41fefedbc26a869ee374f26b358395",
+    (
+        "trigger",
+        "trg_grant_postings_update",
+        "economy_ledger_postings",
+    ): "ec42dbfbc822a4e5178a4f60ea4d37ef94528d53ed3fc28309d4db67746835a5",
+    (
+        "trigger",
+        "trg_grant_ledger_delete",
+        "economy_ledger_transactions",
+    ): "de822913cf46419f08a6ec6651c213f839cf03e0b47a6c6be8a458e00b6f1ae3",
+    (
+        "trigger",
+        "trg_grant_postings_delete",
+        "economy_ledger_postings",
+    ): "18b1f89484cf4e4dad733632e8ee728de7fa97ed912f1dd5987000f3f5eb3f0a",
+    (
+        "trigger",
+        "trg_grant_ledger_replace",
+        "economy_ledger_transactions",
+    ): "22077b3b7a2f4917ebbd318ebc8fdef68f88a2096d66b6863ff82695a14d19cc",
+    (
+        "trigger",
+        "trg_grant_postings_sealed",
+        "economy_ledger_postings",
+    ): "e620a5282b455dc78d0cc7730f9e9a56de6d4ea9448257b7b8cb9f91cabc94d2",
+    (
+        "trigger",
+        "trg_grant_execution_validate",
+        "economy_grant_executions",
+    ): "d9e209a2dd4c23c76c45b3fdd11602c29c4d2bb73d43a1fa7d8cf2b737a23fca",
+    (
+        "trigger",
+        "trg_grant_postings_incoming_update",
+        "economy_ledger_postings",
+    ): "59e67a11e88f3b40d29b9744d5bf92ca28f735a42b120e8229cc8ff1bdb23676",
+    (
+        "trigger",
+        "trg_grant_ledger_incoming_update",
+        "economy_ledger_transactions",
+    ): "145d5b521c46181f6e9eff290bd5d64899964d996d48421233ed94485ea1ba25",
 }

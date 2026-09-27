@@ -134,3 +134,53 @@ async def test_command_errors_do_not_expose_internal_details(
     assert "987654321" not in caplog.text
     assert "987654321" not in interaction.followup.send.await_args.args[0]
     assert interaction.followup.send.await_args.kwargs["ephemeral"]
+
+
+async def test_execute_grant_defers_and_keeps_result_private() -> None:
+    interaction = AsyncMock()
+    interaction.user.id = 111
+    interaction.id = 999
+    service = AsyncMock()
+    pid = uuid4()
+
+    async def execute_grant(
+        *, actor_id: int, proposal_id: object, interaction_id: int
+    ) -> SafetyResult:
+        interaction.response.defer.assert_awaited_once_with(ephemeral=True, thinking=True)
+        assert (actor_id, proposal_id, interaction_id) == (111, pid, 999)
+        return SafetyResult("executed")
+
+    service.execute_grant.side_effect = execute_grant
+    await cast(Callable[..., Awaitable[None]], Safety.execute_grant.callback)(
+        Safety(service, RecordingTelemetry()), interaction, str(pid)
+    )
+    assert interaction.followup.send.await_args.kwargs["ephemeral"]
+    assert not interaction.followup.send.await_args.kwargs["allowed_mentions"].everyone
+    assert "executed" in interaction.followup.send.await_args.args[0]
+
+
+async def test_lost_grant_response_replays_without_issuance(database_runtime: object) -> None:
+    from tests.test_grants import prepared, reconcile
+    from tests.test_join import Eligibility
+    from tests.test_safety import service as admin_service
+
+    from butterbot.infrastructure.persistence.database import DatabaseRuntime
+
+    runtime = cast(DatabaseRuntime, database_runtime)
+    pid = await prepared(runtime)
+    admin = admin_service(runtime, grant_eligibility=Eligibility())
+    interaction = AsyncMock()
+    interaction.user.id = 111
+    interaction.id = 3
+    interaction.followup.send.side_effect = RuntimeError("lost response")
+    with pytest.raises(RuntimeError, match="lost response"):
+        await cast(Callable[..., Awaitable[None]], Safety.execute_grant.callback)(
+            Safety(admin, RecordingTelemetry()), interaction, str(pid)
+        )
+    assert (
+        await admin.execute_grant(actor_id=111, proposal_id=pid, interaction_id=3)
+    ).status == "executed"
+    assert (
+        await admin.execute_grant(actor_id=111, proposal_id=pid, interaction_id=4)
+    ).status == "already_executed"
+    reconcile(runtime)

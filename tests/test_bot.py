@@ -44,6 +44,7 @@ async def test_default_extensions_register_private_join_without_privileged_inten
             "admin_propose",
             "admin_approve",
             "admin_proposal",
+            "admin_execute_grant",
         }
         assert bot.intents.message_content is False
         assert bot.intents.members is False
