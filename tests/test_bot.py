@@ -39,6 +39,8 @@ async def test_default_extensions_register_private_join_without_privileged_inten
             "ping",
             "join",
             "balance",
+            "history",
+            "admin_correct_grant",
             "admin_inspect",
             "admin_capability",
             "admin_propose",

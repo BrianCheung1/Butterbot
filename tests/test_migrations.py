@@ -27,6 +27,7 @@ EXPECTED_TABLES = {
     "safety_proposals",
     "safety_proposal_targets",
     "safety_proposal_scopes",
+    "economy_corrections",
     "economy_grant_executions",
     "economy_grant_targets",
     "safety_access_audit",

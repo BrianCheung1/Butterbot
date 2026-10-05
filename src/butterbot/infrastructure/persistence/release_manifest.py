@@ -1,4 +1,4 @@
-"""Frozen schema fingerprints for release 20260927_0007."""
+"""Frozen schema fingerprints for release 20260930_0008."""
 
 RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     (
@@ -143,11 +143,6 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     ): "9ea9d791863b85441fed618f7ba7e5078805913ace46081eb9b79dd61dda9303",
     (
         "table",
-        "safety_capabilities",
-        "safety_capabilities",
-    ): "c3e6118fc4f8a73202348c824c383746117b36dea210771a7738a02c5108dfc1",
-    (
-        "table",
         "safety_proposals",
         "safety_proposals",
     ): "30dd7d48662a2e029607f3e2bbd3d34763e1b4da25f4af898a2647f25774749a",
@@ -233,21 +228,6 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     ): "0b4aaed17796f345f3b082b9a26905486b026b652e31daad458a23f60030d2d2",
     (
         "trigger",
-        "trg_safety_proposal_initial_state",
-        "safety_proposals",
-    ): "58fab1aff6ad183a62b70131850b9e1fce1fa3f8a6eb6c53390664a65df7a08f",
-    (
-        "trigger",
-        "trg_safety_proposal_require_scope",
-        "safety_proposals",
-    ): "46d333ef4d1b045f07d4d7b994515db038250815d74f8e617e74ddaa5b3b67da",
-    (
-        "trigger",
-        "trg_safety_scope_no_delete",
-        "safety_proposal_scopes",
-    ): "069e2f7a317cb0b55e5487e0d53e4641a9eb0b3e53479638d7dc61f5a231a544",
-    (
-        "trigger",
         "trg_safety_scope_no_replace",
         "safety_proposal_scopes",
     ): "88515a20dafe6a163d2f57553b3b8737cd67b0f628662205abfe160892400c20",
@@ -258,14 +238,29 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     ): "ac987cca1944be8021baf6f3a4ebff68c374516daad16f7c834af2b91861cb12",
     (
         "trigger",
-        "trg_safety_scope_validate",
+        "trg_safety_scope_no_delete",
         "safety_proposal_scopes",
-    ): "3d844cd00b7fd5cb66fa583dffc3fcb6f2a9709e0e39b830f4d4a1d2e05a54a8",
+    ): "069e2f7a317cb0b55e5487e0d53e4641a9eb0b3e53479638d7dc61f5a231a544",
     (
         "trigger",
         "trg_safety_targets_sealed",
         "safety_proposal_targets",
     ): "2810b294188d52975b5d7919dbd02d653ea9885d1f61c60bff692fba1070bc25",
+    (
+        "trigger",
+        "trg_safety_scope_validate",
+        "safety_proposal_scopes",
+    ): "3d844cd00b7fd5cb66fa583dffc3fcb6f2a9709e0e39b830f4d4a1d2e05a54a8",
+    (
+        "trigger",
+        "trg_safety_proposal_initial_state",
+        "safety_proposals",
+    ): "58fab1aff6ad183a62b70131850b9e1fce1fa3f8a6eb6c53390664a65df7a08f",
+    (
+        "trigger",
+        "trg_safety_proposal_require_scope",
+        "safety_proposals",
+    ): "46d333ef4d1b045f07d4d7b994515db038250815d74f8e617e74ddaa5b3b67da",
     (
         "table",
         "economy_grant_executions",
@@ -361,4 +356,69 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
         "trg_grant_ledger_incoming_update",
         "economy_ledger_transactions",
     ): "145d5b521c46181f6e9eff290bd5d64899964d996d48421233ed94485ea1ba25",
+    (
+        "table",
+        "safety_capabilities",
+        "safety_capabilities",
+    ): "06097ce80a177dcec133322e82bd386337a591a8cbe1a5e5b5237438243a6b5f",
+    (
+        "table",
+        "economy_corrections",
+        "economy_corrections",
+    ): "7ca64102ae64035c7c6b25fbc11284c6dcf4388ab9bc60f612513be69d95f8a6",
+    (
+        "index",
+        "ix_correction_actor_time",
+        "economy_corrections",
+    ): "5f2d8ec12c0e81dd349401d3fdd733f3fbea9f12d0a458268d53417dc38cba8d",
+    (
+        "trigger",
+        "trg_correction_update",
+        "economy_corrections",
+    ): "8418e67ab191eb0d520cb6e41aa799aff6e8fdfa6ba218165a65f903abf6e7b4",
+    (
+        "trigger",
+        "trg_correction_delete",
+        "economy_corrections",
+    ): "be7ab2ca7765f791c0c3c7aae08dae7e6cb9db27ca0347097e80c77e07c5fc3d",
+    (
+        "trigger",
+        "trg_correction_replace",
+        "economy_corrections",
+    ): "0368e19d07ece0a9d6bf74bfbfd671a2bc2b1b2e7044bc02043e5ab15cefd625",
+    (
+        "trigger",
+        "trg_correction_postings_update",
+        "economy_ledger_postings",
+    ): "6b0addc55a72d16efcd53d2c89a6d106fe828601fb259e17cb7d403ef3ae99e3",
+    (
+        "trigger",
+        "trg_correction_ledger_update",
+        "economy_ledger_transactions",
+    ): "751b8067fcef5968d2ea54eb6c862b117201a0fdf0dcc8cda86ee3b86915c5ad",
+    (
+        "trigger",
+        "trg_correction_postings_delete",
+        "economy_ledger_postings",
+    ): "0ed9b29483bde1b3cfdc07c4a1a2b7259d6d280c25c30c3599dd1980bba6f8e6",
+    (
+        "trigger",
+        "trg_correction_ledger_delete",
+        "economy_ledger_transactions",
+    ): "9b08c701c9610eb46555152fa310cac2a9aa1118d0252511620d701536f52d94",
+    (
+        "trigger",
+        "trg_correction_postings_insert",
+        "economy_ledger_postings",
+    ): "fb13b02d556465b34f0d8b9170e5638f6808a974cb142f2c4374393008a7c908",
+    (
+        "trigger",
+        "trg_correction_ledger_insert",
+        "economy_ledger_transactions",
+    ): "0401742b5afba6246c91bfc91dbbe853c884c1431e7aa1759603107316f8a1b4",
+    (
+        "trigger",
+        "trg_correction_validate",
+        "economy_corrections",
+    ): "7834833a53c76f7b1f7e45f81298068d2b851ce49e9695b636014d8f58531a83",
 }

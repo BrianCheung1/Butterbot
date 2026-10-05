@@ -230,8 +230,10 @@ self-approval rejection, capability revocation, audit immutability, and full-fre
 
 ### Slice 1.4: Audited grant — depends on 1.3, Spine
 
-Status: `IN REVIEW` for provisional local use. Final independent acceptance is pending;
-production remains blocked by native acceptance. See `docs/reviews/slice-1-4-local-report.md`.
+Status: `PASS` for provisional local use. Independent acceptance of commit `9dd825d`
+is recorded in `docs/reviews/slice-1-4-independent-acceptance.md`.
+Production remains blocked by deferred native acceptance. See also
+`docs/reviews/slice-1-4-local-report.md` for implementation evidence.
 
 An authorized operator grants coins using `issuance.admin`, a reason, transport key, and unique
 `(campaign, target)` or proposal identity. This proves posting polarity, balance projection,
@@ -240,9 +242,20 @@ protection using different interaction IDs. There is no balance setter.
 
 ### Slice 1.5: Player history and compensating correction — depends on 1.4, Spine
 
+Status: `PASS` for provisional local use, independently accepted 2026-10-05 after downgrade
+remediation. See `docs/reviews/slice-1-5-independent-acceptance.md` and the candidate manifest.
+Work was authorized 2026-09-30 after Slice 1.4 local PASS and a reconciled live development grant.
+Native production validation remains deferred.
+The initial correction is a bounded single-target debit against an executed grant; larger,
+bulk and policy-changing correction workflows remain unavailable.
+
 A player pages through safe wallet history; an authorized operator performs a bounded debit or
 compensating correction. Test deterministic ordering, hidden operator metadata, normal account
 polarity, insufficient funds, freeze bypass audit, replay, and supply reconciliation.
+
+Deferred usability follow-up: simplify routine grants to `/give` and approval buttons while
+preserving durable authority, thresholds, ceilings, freezes and audit. The user explicitly
+deferred this work on 2026-09-30; it is not a prerequisite for Slice 1.5.
 
 ### Slice 1.6: Daily claim — depends on 1.4; parallel with 1.5 after ledger contract
 

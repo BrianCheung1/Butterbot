@@ -415,3 +415,30 @@ updates, conflict replacement and subsequent posting/target appends are rejected
 SQLite recursive triggers disabled. Historical proposals and existing balances are not modified
 by either upgrade. The application must establish balanced postings, authority and policy in the
 same transaction; SQLite guards are additional integrity protection, not operator authorization.
+
+### Grant corrections and wallet history (20260930_0008)
+
+`economy_corrections` binds an immutable compensating transaction to an original grant and
+wallet, with unique `(original_transaction_id, account_id)`, actor, target, amount, before/after
+balances, execution time, private reason and freeze-bypass flag. Its actor/time index supports
+rolling retirement limits. The original grant is never edited. Correction postings debit the
+wallet and credit `retirement.correction`; guarded projections and both receipt/audit records
+commit with the transport outcome. SQLite validates the original grant target, bounded amount,
+posting pair, actor/time/reference and resulting wallet before sealing the transaction. Old and
+incoming updates, replacement, delete and append attacks are rejected with recursive triggers
+on or off. Downgrade refuses committed corrections or unreleased correction capabilities.
+
+The capability-name constraint gains explicit execution and freeze-bypass permissions without
+granting them. Replacement of the capability table preserves rows and uses fixed DDL ordering
+for reproducible release schema fingerprints. No older migration is edited.
+When no corrections or correction permissions exist, downgrade restores the exact prior schema
+form (including table quoting and constraint order), so the older release's readiness check
+accepts it. A data-bearing roundtrip regression compares the complete normalized schema.
+
+History reads ledger postings for the caller's wallet with keyset ordering by committed time
+and UUID, joining grant/correction receipts for recorded resulting balances. Pages contain at
+most five entries and a cursor; operator metadata is excluded from the returned projection.
+Existing unsealed rows are not certified by this migration and have no invented after balance.
+The query uses existing wallet-posting and ledger-order indexes; sorting can grow with wallet
+history. An indexed history projection remains a measured scaling follow-up, not evidence of
+production load acceptance.

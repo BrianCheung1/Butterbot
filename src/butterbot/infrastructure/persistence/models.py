@@ -359,7 +359,7 @@ class CapabilityModel(Base):
         CheckConstraint(
             (
                 "capability IN "
-                "('capabilities.manage','players.inspect','restrictions.manage','proposals.approve','grants.propose')"
+                "('capabilities.manage','players.inspect','restrictions.manage','proposals.approve','grants.propose','corrections.execute','corrections.bypass_freeze')"
             ),
             name="ck_safety_capability_name",
         ),
@@ -547,3 +547,50 @@ class GrantTargetModel(Base):
     target_id: Mapped[int] = mapped_column(BigInteger)
     before_amount: Mapped[int] = mapped_column(BigInteger)
     after_amount: Mapped[int] = mapped_column(BigInteger)
+
+
+class CorrectionModel(Base):
+    __tablename__ = "economy_corrections"
+    __table_args__ = (
+        _sqlite_uuid("transaction_id"),
+        _sqlite_uuid("original_transaction_id"),
+        _sqlite_uuid("account_id"),
+        _sqlite_integer("target_id"),
+        _sqlite_integer("actor_id"),
+        _sqlite_integer("amount"),
+        _sqlite_integer("before_amount"),
+        _sqlite_integer("after_amount"),
+        _sqlite_integer("executed_at_ms"),
+        _sqlite_integer("freeze_bypassed"),
+        CheckConstraint(
+            "actor_id > 0 AND target_id > 0 AND amount > 0 AND after_amount >= 0 "
+            "AND before_amount > after_amount AND before_amount-after_amount=amount "
+            "AND executed_at_ms >= 0 AND freeze_bypassed IN (0,1)",
+            name="ck_correction_values",
+        ),
+        CheckConstraint(
+            "length(reason) BETWEEN 1 AND 256 AND instr(reason, char(0)) = 0",
+            name="ck_correction_reason",
+        ),
+        UniqueConstraint(
+            "original_transaction_id", "account_id", name="uq_correction_original_target"
+        ),
+        Index("ix_correction_actor_time", "actor_id", "executed_at_ms"),
+    )
+    transaction_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_ledger_transactions.id", ondelete="RESTRICT"), primary_key=True
+    )
+    original_transaction_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_ledger_transactions.id", ondelete="RESTRICT")
+    )
+    account_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_accounts.id", ondelete="RESTRICT")
+    )
+    target_id: Mapped[int] = mapped_column(BigInteger)
+    actor_id: Mapped[int] = mapped_column(BigInteger)
+    amount: Mapped[int] = mapped_column(BigInteger)
+    before_amount: Mapped[int] = mapped_column(BigInteger)
+    after_amount: Mapped[int] = mapped_column(BigInteger)
+    executed_at_ms: Mapped[int] = mapped_column(BigInteger)
+    reason: Mapped[str] = mapped_column(String(256))
+    freeze_bypassed: Mapped[int] = mapped_column(BigInteger)

@@ -18,7 +18,7 @@ from butterbot.infrastructure.persistence.storage import (
     validate_database_storage,
 )
 
-EXPECTED_SCHEMA_REVISION = "20260927_0007"
+EXPECTED_SCHEMA_REVISION = "20260930_0008"
 
 
 class DatabaseReadinessError(RuntimeError):

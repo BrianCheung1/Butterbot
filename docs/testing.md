@@ -249,3 +249,16 @@ rollback/cancellation after partial money writes, and response/alert loss after 
 SQL tests cover INSERT/UPDATE conflict replacement, destination identity/correlation, and append
 with recursive triggers on/off. The grant adapter privately defers before service invocation.
 Independent review and all repository checks precede local acceptance; native production remains FAIL.
+
+## Provisional Slice 1.5 validation
+
+Exercise self-only history pagination with tied timestamps, cursor validation, immutable recorded
+after-balances and hidden operator metadata. Reads must leave database state unchanged while
+unjoined, inactive, frozen or missing a wallet. Correction tests cover concurrent distinct
+transport IDs, retention cleanup, authority revocation, exact limits and competing rolling
+usage, insufficient funds, explicit freeze-bypass audit, overflow, partial-write rollback and
+cancellation, and response/alert loss after commit. Reconcile every normal correction drill as
+minted minus retired equals wallets, with each projection equal to its postings and balanced
+transactions. Run FK-on adversarial replacement/UPSERT tests with recursive triggers both on
+and off, and preserve populated 0007 grants/authority through upgrade. No correction permissions
+may appear from migration or bootstrap. Keep native Windows skips distinct from local acceptance.

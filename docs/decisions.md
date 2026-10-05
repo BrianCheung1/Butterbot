@@ -856,3 +856,77 @@ remains unavailable without an explicitly authorized second tester. Production s
 native evidence, operational acceptance and reliable alerts. Reconciliation tests compare each
 posting sum to its projection and minted supply to wallets; the existing offline row-shape verifier
 is not represented as a comprehensive monetary reconciler.
+
+### 2026-09-27 — Slice 1.4 local acceptance and disposable activation
+
+The user requested independent acceptance of pushed commit `9dd825d`, then disposable grant
+activation/testing with existing server/user/channel restrictions preserved. Independent review
+returned local PASS; native Linux production acceptance remains deferred and FAIL. The approved
+single operator, numeric limits and local alert destination were verified unchanged. A fresh
+offline development-composition smoke passed grant, duplicate, approval, freeze and reconciliation
+checks. A separate fresh live launcher connected and synchronized restricted commands; live
+interaction smoke awaits the approved tester's authenticated Discord session. No next feature
+was started. See `docs/reviews/slice-1-4-development-activation.md` for evidence and limits.
+
+### 2026-09-30 — Local Slice 1.5 and deferred administrator UX
+
+The user reported executing proposal `d18d3fd2-9ec5-599a-9b6c-3c149aac5a4e` and seeing a
+10-coin wallet, then authorized the next slice if grants were working. A read-only inspection
+of the running disposable database confirmed exactly one execution, wallet +10, issuance.admin
+-10, balanced postings and matching projections. All 39 grant regression tests passed again,
+including business duplicates and transport retention. No live duplicate interaction is claimed.
+The user deferred the proposed `/give` shortcut; record it as a usability follow-up rather than
+blocking ledger/history work. Existing server/user/channel restrictions remain unchanged.
+
+Slice 1.5 implements private self-only `/history` and `/admin_correct_grant`. History uses five
+entries per page ordered by `(committed_at_ms, transaction UUID)` descending, with a strict
+keyset cursor. Each request uses one read snapshot, including while frozen or mutations are
+disabled. Responses expose fixed public labels, time, signed amount, recorded resulting balance
+where available, and transaction reference. They never include free-text administrative reasons,
+operator identities, system accounts or other-player lookup. Unsealed legacy ledger entries have
+a generic label and no invented resulting balance. Paging is not a long-lived snapshot: later
+inserts, including clock-regressed timestamps, may appear on subsequent pages.
+
+The first correction is deliberately limited to a debit of one known executed grant target,
+not an arbitrary balance setter or policy-changing correction. Its amount cannot exceed the
+original target grant, current approval threshold or per-operation ceiling. Larger and bulk
+corrections are rejected, not routed around second approval. Corrections also use the configured
+rolling 24-hour ceiling on actual correction executions, independently of grant issuance totals;
+retirement does not restore grant quota. Future policy expansion requires its own review.
+Partial correction consumes the permanent `(original transaction, wallet)` identity: a second
+request cannot remove more coins, even with a new transport ID or different amount. Additional
+adjustment beyond that partial correction is intentionally unsupported in this slice.
+
+`corrections.execute` is a distinct durable capability. Explicit freeze bypass additionally
+requires `corrections.bypass_freeze`, a mandatory reason, a stored bypass flag, a dedicated audit
+and a post-commit alert. Global runtime disable/storage safety cannot be bypassed. Neither new
+capability is granted by migration or the existing operator bootstrap. A capabilities manager
+must explicitly delegate them before use. The existing live tester was not granted either
+permission and the running development session was not migrated/restarted for this slice.
+
+The correction credits `retirement.correction` and debits the wallet in one transaction with
+guarded nonnegative balance/version updates, immutable before/after receipt, audit and transport
+outcome. Original issuance and grant history remain unchanged; minted minus retired equals wallet
+supply. Revision 0008 adds the correction table and sealed-history guards and extends allowed
+capability names while preserving all existing authority. Prior applied revisions remain frozen.
+Native Linux production acceptance remains deferred; local tests are not release authorization.
+
+### 2026-10-05 — Slice 1.5 provisional local acceptance
+
+Independent review accepted the unchanged remediated source digest
+`bafa67d5a9e19e5a9c4e43cc9da1ba37a9e158439c0da8642c24d699bb3eaa16`.
+The downgrade compatibility finding is closed: rollback restores all 72 prior schema objects
+exactly, preserving old-code readiness. Final verification is 905 passed, 32 skipped, one known
+warning, with passing Ruff/format/Pyright/diff checks. The per-file candidate manifest and
+independent report are under `docs/reviews/slice-1-5-*`. Changes remain uncommitted at acceptance.
+No Slice 1.5 live activation or new operator capability delegation occurred. Existing command
+scope remains unchanged; `/give` UX and native Linux production acceptance remain deferred.
+
+### 2026-10-05 — Slice 1.5 live smoke and next-slice authorization
+
+After requesting a fresh restricted bot start, the tester confirmed +10 grant, -4 correction,
+6-coin balance and history, then duplicate correction protection. Logs corroborate corrected
+and already_corrected outcomes. The user authorized recording this result, committing Slice 1.5,
+and starting Slice 1.6. The daily amount/UTC-period/grace decision remains an explicit gate;
+the proposed local rule is 15 coins per UTC calendar day with no streak, catch-up or grace window,
+pending the user's response. Existing live scope and production deferral remain unchanged.

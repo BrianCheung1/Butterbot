@@ -8,6 +8,8 @@ Capability = Literal[
     "restrictions.manage",
     "proposals.approve",
     "grants.propose",
+    "corrections.execute",
+    "corrections.bypass_freeze",
 ]
 CAPABILITIES: tuple[Capability, ...] = (
     "capabilities.manage",
@@ -15,7 +17,13 @@ CAPABILITIES: tuple[Capability, ...] = (
     "restrictions.manage",
     "proposals.approve",
     "grants.propose",
+    "corrections.execute",
+    "corrections.bypass_freeze",
 )
+BOOTSTRAP_CAPABILITIES: tuple[Capability, ...] = tuple(
+    c for c in CAPABILITIES if not c.startswith("corrections.")
+)
+
 Operation = Literal["freeze", "release", "grant"]
 
 

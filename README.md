@@ -1,8 +1,9 @@
 # Butterbot
 
 Butterbot is a planned Discord economy game designed for long-lived player progression.
-It currently provides a runnable Discord bootstrap, `/ping`, the Slice 1.0 persistence foundation,
-and provisional local `/join` and `/balance` commands. Earning, spending, and progression are not implemented.
+It currently provides a runnable Discord bootstrap, `/ping`, the persistence foundation,
+and provisional local player/wallet and audited administration commands. Repeatable gameplay
+rewards, purchases, transfers and progression are not implemented.
 
 Native Linux acceptance is deferred under the user-authorized local development exception.
 `/join` privately creates or retrieves a player and a zero-balance wallet when eligible. Normal
@@ -144,3 +145,9 @@ private and require durable authority, not Discord roles. `/balance` remains rea
 freeze. See `docs/operations.md` for the explicit one-time local bootstrap and configuration.
 The user approved the disposable local operator/limits/logging policy; configuration is kept in
 the ignored local environment. Native Linux release acceptance remains deferred.
+
+Slice 1.4 adds explicit `/admin_execute_grant` after approval. Slice 1.5 adds private `/history`
+and bounded `/admin_correct_grant`: a once-per-grant-target debit with an immutable audit trail.
+Correction permissions require explicit delegation and are not included in the existing bootstrap.
+See [operations](docs/operations.md) for limits and [the roadmap](ROADMAP.md) for acceptance status.
+The simpler `/give` interface is a deferred usability improvement.

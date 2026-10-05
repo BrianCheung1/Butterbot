@@ -1,6 +1,16 @@
 # Slice 1.4 provisional local gate — 2026-09-27
 
-**Release verdict: FAIL. Local status: IN REVIEW.**
+**Release verdict: FAIL. Local status: PASS (independent acceptance addendum below).**
+
+## Independent acceptance addendum
+
+The continuation independently accepted commit `9dd825d` for provisional local use. See
+`slice-1-4-independent-acceptance.md`: 187 independent regression tests and four fresh adversarial
+probes passed; all 103 candidate source hashes matched. The coordinator reran mandatory checks:
+827 passed, 32 skipped, one known warning; Ruff, formatting, Pyright and diff checks passed.
+The historical pending-review narrative below describes the original implementation handoff.
+Native production acceptance remains deferred and FAIL. Activation evidence is recorded separately
+in `slice-1-4-development-activation.md`.
 
 Implementation and required local verification are complete. Final independent local acceptance
 is pending because the reviewer reached its usage limit before issuing a verdict. Native Linux

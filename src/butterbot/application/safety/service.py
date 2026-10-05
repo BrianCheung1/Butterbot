@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 from uuid import NAMESPACE_URL, UUID, uuid5
 
+from butterbot.application.economy.corrections import correct_grant
 from butterbot.application.economy.grants import execute_grant
 from butterbot.application.exact_integer import checked_add_int64, require_int64
 from butterbot.application.operations.idempotency import (
@@ -21,6 +22,7 @@ SAFETY_NAMESPACES = (
     "safety.propose",
     "safety.approve",
     "safety.execute_grant",
+    "safety.correct_grant",
 )
 DAY_MS = 86_400_000
 Status = Literal[
@@ -38,6 +40,9 @@ Status = Literal[
     "unverified_scope",
     "executed",
     "already_executed",
+    "corrected",
+    "already_corrected",
+    "insufficient_funds",
     "approval_required",
 ]
 _STATUSES = {
@@ -55,6 +60,9 @@ _STATUSES = {
     "unverified_scope",
     "executed",
     "already_executed",
+    "corrected",
+    "already_corrected",
+    "insufficient_funds",
     "approval_required",
 }
 
@@ -200,7 +208,7 @@ class SafetyService:
         async def execute(tx: UnitOfWork) -> SafetyResult:
             if self._runtime_safety is not None and not self._runtime_safety.is_safe():
                 return SafetyResult("unavailable")
-            if namespace == "safety.execute_grant" and (
+            if namespace in {"safety.execute_grant", "safety.correct_grant"} and (
                 self._grant_eligibility is None or not self._grant_eligibility.evaluate().allowed
             ):
                 return SafetyResult("unavailable")
@@ -232,7 +240,16 @@ class SafetyService:
                     )
                 return (
                     StableOutcome.success(f"safety.{status}")
-                    if status in {"applied", "pending", "approved", "executed", "already_executed"}
+                    if status
+                    in {
+                        "applied",
+                        "pending",
+                        "approved",
+                        "executed",
+                        "already_executed",
+                        "corrected",
+                        "already_corrected",
+                    }
                     else StableOutcome.typed_rejection(f"safety.{status}")
                 )
 
@@ -243,7 +260,16 @@ class SafetyService:
             status = outcome.code.removeprefix("safety.")
             expected_kind = (
                 "success"
-                if status in {"applied", "pending", "approved", "executed", "already_executed"}
+                if status
+                in {
+                    "applied",
+                    "pending",
+                    "approved",
+                    "executed",
+                    "already_executed",
+                    "corrected",
+                    "already_corrected",
+                }
                 else "typed_rejection"
             )
             if (
@@ -543,6 +569,61 @@ class SafetyService:
             namespace="safety.execute_grant",
             capability="grants.propose",
             semantic={"proposal": str(proposal_id)},
+            now=self._now(),
+            body=apply,
+        )
+
+    async def correct_grant(
+        self,
+        *,
+        actor_id: int,
+        target_id: int,
+        original_transaction_id: UUID,
+        amount: int,
+        reason: str,
+        bypass_freeze: bool,
+        interaction_id: int,
+    ) -> SafetyResult:
+        if type(original_transaction_id) is not UUID or type(bypass_freeze) is not bool:
+            raise ValueError("invalid correction identity or bypass")
+        require_int64(target_id, "target_id", minimum=1)
+        require_int64(amount, "amount", minimum=1)
+        _reason(reason)
+
+        async def apply(tx: UnitOfWork) -> Status:
+            now = self._now()
+            status = await correct_grant(
+                tx,
+                actor_id=actor_id,
+                target_id=target_id,
+                original_transaction_id=original_transaction_id,
+                transaction_id=self._id_factory(),
+                amount=amount,
+                reason=reason,
+                bypass_freeze=bypass_freeze,
+                interaction_id=interaction_id,
+                now=now,
+                policy=self._policy,
+            )
+            if status == "corrected" and bypass_freeze and await tx.safety.is_frozen(target_id):
+                await self._audit(
+                    tx, actor_id, "correction.freeze_bypass", reason, now, target=target_id
+                )
+            await self._audit(tx, actor_id, f"correction.{status}", reason, now, target=target_id)
+            return status
+
+        return await self._mutate(
+            actor_id=actor_id,
+            interaction_id=interaction_id,
+            namespace="safety.correct_grant",
+            capability="corrections.execute",
+            semantic={
+                "original": str(original_transaction_id),
+                "target": target_id,
+                "amount": amount,
+                "reason": reason,
+                "bypass_freeze": bypass_freeze,
+            },
             now=self._now(),
             body=apply,
         )

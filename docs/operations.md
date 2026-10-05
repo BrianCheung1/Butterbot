@@ -570,3 +570,24 @@ proposal preview. Repeating execution of the same proposal must not add coins. D
 IDs represent different intent. Multi-target or above-threshold work still requires a distinct
 currently authorized approver; do not broaden the configured command scope to bypass that rule.
 Historical success replay does not mean new money was issued. No production database is used.
+
+### Local Slice 1.5 workflow
+
+After local acceptance, restart only disposable development to allocate revision 0008 storage.
+`/history` privately pages the caller's wallet; copy its next-page cursor into `/history before:`.
+Stable transaction references identify grants for correction. Operator reasons are private audit
+data and are never copied into player history.
+
+Correction authority is not bootstrapped automatically. An authorized capability manager can
+explicitly delegate `corrections.execute` using `/admin_capability`. A correction command takes
+`transaction` (the original grant transaction UUID), `user`, positive integer `amount`, and
+`reason`. `/admin_correct_grant` removes at most the original grant and the current single-operator
+threshold (100 with the existing local policy). It supports one correction per original grant
+and recipient, including when only part of the grant is removed. It never permits a negative
+wallet; spent funds cause `insufficient_funds`. Higher amounts, bulk and policy-changing
+corrections are unavailable. Current operation/24-hour limits also apply.
+
+Frozen recipients require explicit `bypass_freeze:true` plus separately delegated
+`corrections.bypass_freeze`; each actual bypass is audited and alerted. Runtime mutation disable
+and unsafe storage still deny execution. Do not broaden the existing development scope.
+New live capability delegation or Slice 1.5 activation was not performed during implementation.

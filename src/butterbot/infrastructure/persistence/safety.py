@@ -4,7 +4,12 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from butterbot.application.safety.ports import CAPABILITIES, Capability, Operation, Proposal
+from butterbot.application.safety.ports import (
+    BOOTSTRAP_CAPABILITIES,
+    Capability,
+    Operation,
+    Proposal,
+)
 from butterbot.infrastructure.persistence.models import (
     AccessAuditModel,
     CapabilityModel,
@@ -41,7 +46,7 @@ class SqlAlchemySafetyRepository:
         # Never recover authority automatically from a restarted process or an empty capability set.
         self._session.add(SafetyBootstrapModel(id=1, created_at_ms=now_ms))
         for actor_id in operator_ids:
-            for capability in CAPABILITIES:
+            for capability in BOOTSTRAP_CAPABILITIES:
                 await self.set_capability(actor_id, capability, True)
         await self._session.flush()
         return True

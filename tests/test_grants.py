@@ -431,7 +431,7 @@ async def test_failure_after_first_credit_rolls_back_and_retries(
 ) -> None:
     pid = await prepared(database_runtime, targets=(123, 456))
     admin = service(database_runtime, grant_eligibility=Eligibility())
-    original = SqlAlchemyGrantRepository._project  # pyright: ignore[reportPrivateUsage]
+    original = SqlAlchemyGrantRepository.project  # pyright: ignore[reportPrivateUsage]
     calls = 0
 
     async def fail(
@@ -450,12 +450,12 @@ async def test_failure_after_first_credit_rolls_back_and_retries(
                 raise asyncio.CancelledError()
             raise RuntimeError("injected after first credit")
 
-    monkeypatch.setattr(SqlAlchemyGrantRepository, "_project", fail)
+    monkeypatch.setattr(SqlAlchemyGrantRepository, "project", fail)
     with pytest.raises(asyncio.CancelledError if cancel else RuntimeError):
         await admin.execute_grant(actor_id=111, proposal_id=pid, interaction_id=3)
     reconcile(database_runtime)
     assert rows(database_runtime.database_path, "SELECT * FROM economy_grant_executions") == []
-    monkeypatch.setattr(SqlAlchemyGrantRepository, "_project", original)
+    monkeypatch.setattr(SqlAlchemyGrantRepository, "project", original)
     assert (
         await admin.execute_grant(actor_id=111, proposal_id=pid, interaction_id=3)
     ).status == "executed"

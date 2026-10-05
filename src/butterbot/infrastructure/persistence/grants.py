@@ -109,13 +109,13 @@ class SqlAlchemyGrantRepository:
             )
         )
         await self._session.flush()
-        await self._project(account.id, balance.amount, balance.version, after, next_version)
+        await self.project(account.id, balance.amount, balance.version, after, next_version)
         self._session.add(
             LedgerPostingModel(transaction_id=transaction_id, account_id=account.id, amount=-total)
         )
         for credit in credits:
             wallet = credit.wallet
-            await self._project(
+            await self.project(
                 wallet.id,
                 wallet.amount,
                 wallet.version,
@@ -150,7 +150,7 @@ class SqlAlchemyGrantRepository:
         )
         await self._session.flush()
 
-    async def _project(
+    async def project(
         self, account_id: UUID, before: int, version: int, after: int, next_version: int
     ) -> None:
         result = cast(

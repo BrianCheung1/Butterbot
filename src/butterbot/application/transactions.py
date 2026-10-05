@@ -7,7 +7,9 @@ from time import perf_counter
 from types import TracebackType
 from typing import Protocol, Self
 
+from butterbot.application.economy.corrections import CorrectionRepository
 from butterbot.application.economy.grants import GrantRepository
+from butterbot.application.economy.history import HistoryRepository
 from butterbot.application.economy.ports import AccountRepository
 from butterbot.application.operations.ports import (
     OperationsTelemetry,
@@ -19,6 +21,12 @@ from butterbot.application.safety.ports import SafetyRepository
 
 
 class UnitOfWork(Protocol):
+    @property
+    def corrections(self) -> CorrectionRepository: ...
+
+    @property
+    def history(self) -> HistoryRepository: ...
+
     @property
     def grants(self) -> GrantRepository: ...
 

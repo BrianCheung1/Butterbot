@@ -214,6 +214,34 @@ class Safety(commands.Cog):
 
         await self._respond(interaction, "admin_execute_grant", execute)
 
+    @app_commands.command(
+        name="admin_correct_grant",
+        description="Remove a bounded amount from a mistaken grant once.",
+    )
+    async def correct_grant(
+        self,
+        interaction: discord.Interaction,
+        transaction: str,
+        user: discord.User,
+        amount: str,
+        reason: str,
+        bypass_freeze: bool = False,
+    ) -> None:
+        async def execute() -> SafetyResult:
+            if len(amount) > 19 or not amount.isascii() or not amount.isdecimal():
+                raise ValueError("invalid amount")
+            return await self._service.correct_grant(
+                actor_id=interaction.user.id,
+                target_id=user.id,
+                original_transaction_id=UUID(transaction),
+                amount=int(amount),
+                reason=reason,
+                bypass_freeze=bypass_freeze,
+                interaction_id=interaction.id,
+            )
+
+        await self._respond(interaction, "admin_correct_grant", execute)
+
 
 class _SafetyBot(Protocol):
     safety_service: SafetyService | None
