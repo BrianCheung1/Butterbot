@@ -1,5 +1,9 @@
 # Database
 
+Current local checkpoint: Slice 1.6 independently accepted; schema head `20261005_0009`.
+Native Linux production validation remains deferred. Dated sections below retain historical
+contracts and evidence; prior revision numbers are not the current startup target.
+
 ## Persistence direction
 
 SQLite is the initial database. Application access uses SQLAlchemy 2's async API with
@@ -345,7 +349,7 @@ retention, verification, and production-enable criteria are normative in `operat
 
 ## September 2026 gate remediation
 
-Release head is `20260914_0003`; `20260825_0001` remains the frozen historical
+At the September remediation checkpoint, release head was `20260914_0003`; `20260825_0001` remains the frozen historical
 baseline. Upgrade explicitly with mutations stopped. The new revision prevents changes
 to player UUID/Discord identity, account UUID/owner/kind/currency/system identity, and
 projection account UUID/kind. No-op identity assignments remain legal.
@@ -378,7 +382,7 @@ an independently reviewed recovery. Both previous revisions remain historically 
 
 ## Slice 1.3 schema
 
-Current head `20260922_0004` adds `safety_bootstrap`, `safety_capabilities`,
+Revision `20260922_0004` adds `safety_bootstrap`, `safety_capabilities`,
 `safety_restrictions`, `safety_proposals`, `safety_proposal_targets`, and
 `safety_access_audit`. The frozen release manifest includes every new table/index/trigger.
 UUID/integer checks, proposal state/approval checks, immutable audit/receipt guards and
@@ -442,3 +446,17 @@ Existing unsealed rows are not certified by this migration and have no invented 
 The query uses existing wallet-posting and ledger-order indexes; sorting can grow with wallet
 history. An indexed history projection remains a measured scaling follow-up, not evidence of
 production load acceptance.
+
+
+## Slice 1.6 daily receipts
+
+Revision `20261005_0009` adds `economy_daily_claims` without changing prior tables or authority.
+The permanent unique `(player_id, claim_period)` key defines entitlement independently of
+transport retention. A unique successful interaction ID binds permanent replay to actor and
+period. The receipt records wallet, transaction, before/after balance and writer-time UTC epoch
+milliseconds. One service transaction creates balanced issuance.daily/wallet postings, guarded
+projection updates, receipt and transport outcome. SQLite receipt validation and immutable-history
+triggers reject replacement, incoming updates, appended postings and changes to sealed records.
+Readiness includes the new objects in its exact release manifest. Empty downgrade restores the
+prior schema exactly; downgrade with claimed rewards refuses to discard history. Applied prior
+migrations remain frozen. Do not migrate a running development session; use a fresh launch.

@@ -22,4 +22,6 @@ until validated against content and simulations:
   independent Critical, High, and early-stage Medium findings
 - [Development roadmap](../ROADMAP.md): dependency-ordered vertical slices and parallel lanes
 
+Current continuation: [Slice 1.7 policy handoff](handoff-slice-1-7.md).
+
 Update the relevant document in the same change that establishes a durable design choice.

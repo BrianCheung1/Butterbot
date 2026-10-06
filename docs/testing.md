@@ -1,5 +1,9 @@
 # Testing
 
+Current local checkpoint: Slice 1.6 independently accepted; schema head `20261005_0009`.
+Native Linux production validation remains deferred. Dated sections below retain historical
+contracts and evidence; prior revision numbers are not the current startup target.
+
 ## Strategy
 
 - Unit-test pure business rules without Discord or a database.
@@ -180,7 +184,7 @@ lock. Windows collects these tests as skips and cannot establish the production 
 
 ## September 2026 gate remediation
 
-Release head is `20260914_0003`; `20260825_0001` remains the frozen historical
+At the September remediation checkpoint, release head was `20260914_0003`; `20260825_0001` remains the frozen historical
 baseline. Upgrade explicitly with mutations stopped. The new revision prevents changes
 to player UUID/Discord identity, account UUID/owner/kind/currency/system identity, and
 projection account UUID/kind. No-op identity assignments remain legal.
@@ -262,3 +266,16 @@ minted minus retired equals wallets, with each projection equal to its postings 
 transactions. Run FK-on adversarial replacement/UPSERT tests with recursive triggers both on
 and off, and preserve populated 0007 grants/authority through upgrade. No correction permissions
 may appear from migration or bootstrap. Keep native Windows skips distinct from local acceptance.
+
+
+## Provisional Slice 1.6 validation
+
+Daily tests use injected UTC time and real temporary SQLite databases. Cover distinct simultaneous
+claims, exact midnight, writer admission across midnight, missed days without catch-up, permanent
+success replay after transport cleanup, actor/period conflicts, player/global/runtime restrictions,
+read-only inspection, rollback/cancellation after partial writes, integer/version overflow, private
+history, and response loss after commit. Migration checks preserve populated grants/corrections
+and authority, compare exact prior schema on empty downgrade, and refuse populated downgrade.
+Independent incoming replacement/UPSERT attacks run FK-on with recursive triggers both on/off.
+Discord commands expose no target or arbitrary-period parameters; immutable interaction time
+supplies period intent. Development guild/user/channel checks remain unchanged.

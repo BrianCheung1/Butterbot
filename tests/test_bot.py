@@ -31,7 +31,12 @@ async def test_setup_hook_loads_each_configured_extension() -> None:
 async def test_default_extensions_register_private_join_without_privileged_intents() -> None:
     service = AsyncMock()
     service.join.return_value = JoinResult("disabled", False)
-    bot = create_bot(join_service=service, balance_service=AsyncMock(), safety_service=AsyncMock())
+    bot = create_bot(
+        join_service=service,
+        balance_service=AsyncMock(),
+        safety_service=AsyncMock(),
+        daily_service=AsyncMock(),
+    )
     bot.tree.sync = AsyncMock(return_value=[])
     try:
         await bot.setup_hook()
@@ -40,6 +45,7 @@ async def test_default_extensions_register_private_join_without_privileged_inten
             "join",
             "balance",
             "history",
+            "daily",
             "admin_correct_grant",
             "admin_inspect",
             "admin_capability",

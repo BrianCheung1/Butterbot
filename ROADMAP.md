@@ -1,5 +1,13 @@
 # Butterbot development roadmap
 
+## Current checkpoint — 2026-10-06
+
+Phase 0 is accepted. Slices 1.0–1.3 are implemented with local verification and deferred native
+release acceptance; Slices 1.4–1.6 have explicit independent provisional local PASS verdicts.
+The tester confirmed daily rewards working. Slice 1.7 policy design is the next authorized work;
+transfer implementation awaits its policy decisions. Phase 1 integration and all production
+enablement gates remain outstanding. Historical exceptions below do not grant production approval.
+
 ## How to use this roadmap
 
 Each slice is an end-to-end outcome with domain rules, an application use case, persistence
@@ -258,6 +266,11 @@ preserving durable authority, thresholds, ceilings, freezes and audit. The user 
 deferred this work on 2026-09-30; it is not a prerequisite for Slice 1.5.
 
 ### Slice 1.6: Daily claim — depends on 1.4; parallel with 1.5 after ledger contract
+
+Status: `PASS` for provisional local use, independently accepted 2026-10-06.
+See `docs/reviews/slice-1-6-independent-acceptance.md` and the candidate manifest.
+Selected reward: 15 coins per UTC calendar day, midnight reset, no streak/grace/catch-up.
+Private `/daily status` and `/daily claim`; native production acceptance remains deferred.
 
 A player inspects and claims the approved modest daily reward. Enforce unique
 `(player, claim_period)` separately from interaction idempotency. Test exact UTC boundaries,

@@ -2,8 +2,8 @@
 
 Butterbot is a planned Discord economy game designed for long-lived player progression.
 It currently provides a runnable Discord bootstrap, `/ping`, the persistence foundation,
-and provisional local player/wallet and audited administration commands. Repeatable gameplay
-rewards, purchases, transfers and progression are not implemented.
+and provisional local player/wallet, audited administration, history, correction and daily-reward
+commands through Slice 1.6. Purchases, transfers, mining and progression are not implemented.
 
 Native Linux acceptance is deferred under the user-authorized local development exception.
 `/join` privately creates or retrieves a player and a zero-balance wallet when eligible. Normal
@@ -94,7 +94,8 @@ Run from this checkout:
 ```
 
 The launcher requires its own token and refuses to reuse the configured `DISCORD_TOKEN`.
-It registers `/ping`, `/join`, and `/balance` only in the selected test server, and rejects commands from
+It registers the current player, daily, history and administrator commands only in the selected
+test server, and rejects commands from
 other users, servers, channels, or DMs before calling the application. Threads have their own
 channel IDs and are also rejected unless explicitly configured. It does not synchronize global
 commands. Normal startup and production mutation checks are unchanged.
@@ -103,7 +104,8 @@ Each launch allocates and migrates a new database under ignored
 `data/discord-development/join-*/`. It never uses `BUTTERBOT_DATABASE_PATH`, never opens an
 existing database, and never automatically migrates production storage. Development joins use
 the real transaction service and storage monitoring with a zero-balance wallet. No currency
-is issued. No database-path override is offered.
+is issued by joining. Authorized grants and daily claims can issue development coins.
+No database-path override is offered.
 
 In the configured channel, run `/balance` before joining: expect a private invitation to `/join`.
 Then run `/join`: expect a private "You joined Butterbot!" response.
@@ -151,3 +153,10 @@ and bounded `/admin_correct_grant`: a once-per-grant-target debit with an immuta
 Correction permissions require explicit delegation and are not included in the existing bootstrap.
 See [operations](docs/operations.md) for limits and [the roadmap](ROADMAP.md) for acceptance status.
 The simpler `/give` interface is a deferred usability improvement.
+
+
+Slice 1.6 adds private `/daily status` and `/daily claim`: 15 coins once per UTC calendar day,
+resetting at midnight UTC. There is no streak bonus, grace window or missed-day catch-up.
+Join first; claims honor player/global freezes and runtime mutation controls. Daily rewards
+appear in `/history`. This is provisional local development; public gameplay and native Linux
+production acceptance remain gated. A fresh development launch starts a new disposable wallet.

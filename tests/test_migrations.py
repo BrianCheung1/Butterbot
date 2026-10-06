@@ -13,6 +13,7 @@ from butterbot.infrastructure.persistence.readiness import EXPECTED_SCHEMA_REVIS
 from butterbot.infrastructure.persistence.schema_contract import SQLITE_AGGREGATE_TRIGGER_SQL
 
 EXPECTED_TABLES = {
+    "economy_daily_claims",
     "alembic_version",
     "players",
     "economy_accounts",

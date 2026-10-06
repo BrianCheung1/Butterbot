@@ -1,4 +1,4 @@
-"""Frozen schema fingerprints for release 20260930_0008."""
+"""Frozen schema fingerprints for release 20261005_0009."""
 
 RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
     (
@@ -421,4 +421,59 @@ RELEASE_SCHEMA_SHA256: dict[tuple[str, str, str], str] = {
         "trg_correction_validate",
         "economy_corrections",
     ): "7834833a53c76f7b1f7e45f81298068d2b851ce49e9695b636014d8f58531a83",
+    (
+        "table",
+        "economy_daily_claims",
+        "economy_daily_claims",
+    ): "d2df2848507ea62d5ce806e46f6851dc4e8fb30220dbe59c866644b7e36de729",
+    (
+        "trigger",
+        "trg_daily_update",
+        "economy_daily_claims",
+    ): "fa70be8bb1059d333e7c4ad3586986b75e3df0d8441a43c606b4d78a7389481c",
+    (
+        "trigger",
+        "trg_daily_delete",
+        "economy_daily_claims",
+    ): "42dc41ef12a83508d0a65e2c9ca84372ea344de1b3a5aabc61f0cbd4cd1d6b61",
+    (
+        "trigger",
+        "trg_daily_replace",
+        "economy_daily_claims",
+    ): "6522045296c5fb4ea01f2924f0b85eac2ce7b2fe6f9fa86b595b35b66e90c23b",
+    (
+        "trigger",
+        "trg_daily_postings_update",
+        "economy_ledger_postings",
+    ): "e6c07f6d5fec2a939412b0dc612ea360f8c9501047306e292d07852a3a79826a",
+    (
+        "trigger",
+        "trg_daily_ledger_update",
+        "economy_ledger_transactions",
+    ): "29aba2f0658b9b2840fb6f0c8d81be84201c910a6d1ac83baff21e504dfbf9c3",
+    (
+        "trigger",
+        "trg_daily_postings_delete",
+        "economy_ledger_postings",
+    ): "06e8182231cca9c9b3b6ab192f0d1e2e8a2d50bde9934f9af8fe3f25b4496a62",
+    (
+        "trigger",
+        "trg_daily_ledger_delete",
+        "economy_ledger_transactions",
+    ): "18b9bd29293520e08b7801810d00d4b99a117f395df24f56cd17603ef38a66a1",
+    (
+        "trigger",
+        "trg_daily_postings_insert",
+        "economy_ledger_postings",
+    ): "3aa228993199bac48958f658684a2248b6f304dc5c83b263b8528809af1820bf",
+    (
+        "trigger",
+        "trg_daily_ledger_insert",
+        "economy_ledger_transactions",
+    ): "396f91f08d25c877278dc7eec3f0df2bdf2cc076ca0b13d7e3c6dd8810c71693",
+    (
+        "trigger",
+        "trg_daily_validate",
+        "economy_daily_claims",
+    ): "f21df6c0241ced453fd8e9a4c9846d98db4559502efb945bca649e5dee062ecd",
 }

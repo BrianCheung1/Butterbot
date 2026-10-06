@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 from sqlalchemy import URL
 
 from butterbot.application.economy.balance import BalanceService, BalanceUseCase
+from butterbot.application.economy.daily import DAILY_NAMESPACE, DailyService, DailyUseCase
 from butterbot.application.exact_integer import INT64_MAX
 from butterbot.application.operations.idempotency import (
     TransportIdempotencyCoordinator,
@@ -103,6 +104,7 @@ class DevelopmentBot(commands.Bot):
         telemetry: OperationsTelemetry,
         balance_service: BalanceUseCase | None = None,
         safety_service: SafetyService | None = None,
+        daily_service: DailyUseCase | None = None,
     ) -> None:
         super().__init__(
             command_prefix=commands.when_mentioned,
@@ -116,6 +118,7 @@ class DevelopmentBot(commands.Bot):
         self.development_channel_id = settings.channel_id
         self.join_service = service
         self.balance_service = balance_service
+        self.daily_service = daily_service
         self.safety_service = safety_service
         self.operations_telemetry = telemetry
 
@@ -125,6 +128,7 @@ class DevelopmentBot(commands.Bot):
         await self.load_extension("butterbot.discord_app.extensions.join")
         await self.load_extension("butterbot.discord_app.extensions.balance")
         await self.load_extension("butterbot.discord_app.extensions.safety")
+        await self.load_extension("butterbot.discord_app.extensions.daily")
         guild = discord.Object(id=self.development_guild_id)
         self.tree.copy_global_to(guild=guild)
         self.tree.clear_commands(guild=None)
@@ -207,6 +211,17 @@ async def run_development(settings: DevelopmentSettings) -> None:
             telemetry,
             BalanceService(database.unit_of_work_factory.read_snapshot),
             safety_service,
+            DailyService(
+                ApplicationTransactionRunner(
+                    database.unit_of_work_factory, is_retryable=is_sqlite_busy, telemetry=telemetry
+                ),
+                database.unit_of_work_factory.read_snapshot,
+                TransportIdempotencyCoordinator(
+                    discord_retention_registry(DAILY_NAMESPACE), telemetry=telemetry
+                ),
+                eligibility,
+                clock_ms=lambda: time_ns() // 1_000_000,
+            ),
         )
         await serve_until_shutdown(bot, settings.discord_token)
     finally:

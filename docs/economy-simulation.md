@@ -228,8 +228,9 @@ feature cannot redefine the cohort assumptions in its own module merely to pass 
 - Tool charge capacity, refill bundle size, whether base tools consume charges, and exact refill
   price require UX tests. The selected invariant is non-destructive failure with an always-usable
   base action.
-- The exact daily claim period/grace rule and whether 15 coins remains the shipped amount gate
-  Slice 1.6.
+- Slice 1.6 local policy was selected under user delegation on 2026-10-05: 15 coins per
+  UTC calendar day, midnight reset, no streak/grace/catch-up. The integrated Phase 2 balance
+  gate still determines suitability for public gameplay.
 - Exact curve thresholds, unlock content, and purchase prices remain versioned proposals before
   public profession rewards; the values here are bounds and capacity probes.
 - Repeatable mastery, prestige, cosmetic, collection, and community-project demand must replace

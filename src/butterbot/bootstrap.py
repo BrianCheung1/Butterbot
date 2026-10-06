@@ -5,6 +5,7 @@ from time import time_ns
 from uuid import uuid4
 
 from butterbot.application.economy.balance import BalanceService
+from butterbot.application.economy.daily import DAILY_NAMESPACE, DailyService
 from butterbot.application.operations.idempotency import (
     TransportIdempotencyCoordinator,
     discord_retention_registry,
@@ -43,6 +44,7 @@ class ApplicationRuntime:
     telemetry: StructuredLoggingTelemetry
     safety_service: SafetyService
     balance_service: BalanceService
+    daily_service: DailyService
     join_service: JoinService
 
     async def close(self) -> None:
@@ -125,7 +127,8 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
         lambda: telemetry.mutations_state(enabled=decision.allowed, reason=decision.reason),
     )
     idempotency = TransportIdempotencyCoordinator(
-        discord_retention_registry(JOIN_NAMESPACE, *SAFETY_NAMESPACES), telemetry=telemetry
+        discord_retention_registry(DAILY_NAMESPACE, JOIN_NAMESPACE, *SAFETY_NAMESPACES),
+        telemetry=telemetry,
     )
     transactions = ApplicationTransactionRunner(
         database.unit_of_work_factory, is_retryable=is_sqlite_busy, telemetry=telemetry
@@ -147,6 +150,13 @@ async def compose_application(settings: Settings) -> ApplicationRuntime:
             grant_eligibility=eligibility,
         ),
         balance_service=BalanceService(database.unit_of_work_factory.read_snapshot),
+        daily_service=DailyService(
+            transactions,
+            database.unit_of_work_factory.read_snapshot,
+            idempotency,
+            eligibility,
+            clock_ms=lambda: time_ns() // 1_000_000,
+        ),
         join_service=JoinService(
             transactions,
             idempotency,

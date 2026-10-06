@@ -594,3 +594,43 @@ class CorrectionModel(Base):
     executed_at_ms: Mapped[int] = mapped_column(BigInteger)
     reason: Mapped[str] = mapped_column(String(256))
     freeze_bypassed: Mapped[int] = mapped_column(BigInteger)
+
+
+class DailyClaimModel(Base):
+    __tablename__ = "economy_daily_claims"
+    __table_args__ = (
+        *(_sqlite_uuid(n) for n in ("transaction_id", "player_id", "account_id")),
+        *(
+            _sqlite_integer(n)
+            for n in (
+                "actor_id",
+                "interaction_id",
+                "claim_period",
+                "executed_at_ms",
+                "before_amount",
+                "after_amount",
+            )
+        ),
+        CheckConstraint(
+            "actor_id > 0 AND interaction_id > 0 AND claim_period >= 0 "
+            "AND executed_at_ms >= 0 AND claim_period = executed_at_ms / 86400000 "
+            "AND before_amount >= 0 AND after_amount > before_amount "
+            "AND after_amount-before_amount=15",
+            name="ck_daily_values",
+        ),
+        UniqueConstraint("player_id", "claim_period", name="uq_daily_player_period"),
+        UniqueConstraint("interaction_id", name="uq_daily_interaction"),
+    )
+    transaction_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_ledger_transactions.id", ondelete="RESTRICT"), primary_key=True
+    )
+    player_id: Mapped[UUID] = mapped_column(Uuid(), ForeignKey("players.id", ondelete="RESTRICT"))
+    account_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("economy_accounts.id", ondelete="RESTRICT")
+    )
+    actor_id: Mapped[int] = mapped_column(BigInteger)
+    interaction_id: Mapped[int] = mapped_column(BigInteger)
+    claim_period: Mapped[int] = mapped_column(BigInteger)
+    executed_at_ms: Mapped[int] = mapped_column(BigInteger)
+    before_amount: Mapped[int] = mapped_column(BigInteger)
+    after_amount: Mapped[int] = mapped_column(BigInteger)

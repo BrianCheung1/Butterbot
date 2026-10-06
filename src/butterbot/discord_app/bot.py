@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 
 from butterbot.application.economy.balance import BalanceUseCase
+from butterbot.application.economy.daily import DailyUseCase
 from butterbot.application.operations.idempotency import NullOperationsTelemetry
 from butterbot.application.operations.ports import OperationsTelemetry
 from butterbot.application.players.join import JoinUseCase
@@ -15,6 +16,7 @@ DEFAULT_EXTENSIONS = (
     "butterbot.discord_app.extensions.join",
     "butterbot.discord_app.extensions.balance",
     "butterbot.discord_app.extensions.safety",
+    "butterbot.discord_app.extensions.daily",
 )
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ class ButterBot(commands.Bot):
         telemetry: OperationsTelemetry | None = None,
         join_service: JoinUseCase | None = None,
         balance_service: BalanceUseCase | None = None,
+        daily_service: DailyUseCase | None = None,
         safety_service: SafetyService | None = None,
     ) -> None:
         intents = discord.Intents.default()
@@ -36,6 +39,7 @@ class ButterBot(commands.Bot):
         self.operations_telemetry = telemetry or NullOperationsTelemetry()
         self.join_service = join_service
         self.balance_service = balance_service
+        self.daily_service = daily_service
         self.safety_service = safety_service
 
     async def setup_hook(self) -> None:
@@ -56,6 +60,7 @@ def create_bot(
     telemetry: OperationsTelemetry | None = None,
     join_service: JoinUseCase | None = None,
     balance_service: BalanceUseCase | None = None,
+    daily_service: DailyUseCase | None = None,
     safety_service: SafetyService | None = None,
 ) -> ButterBot:
     return ButterBot(
@@ -63,5 +68,6 @@ def create_bot(
         telemetry=telemetry,
         join_service=join_service,
         balance_service=balance_service,
+        daily_service=daily_service,
         safety_service=safety_service,
     )

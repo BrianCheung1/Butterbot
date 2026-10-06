@@ -8,6 +8,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from butterbot.application.economy.corrections import CorrectionRepository
+from butterbot.application.economy.daily_ports import DailyRepository
 from butterbot.application.economy.grants import GrantRepository
 from butterbot.application.economy.history import HistoryRepository
 from butterbot.application.economy.ports import AccountRepository
@@ -21,6 +22,9 @@ from butterbot.application.safety.ports import SafetyRepository
 
 
 class UnitOfWork(Protocol):
+    @property
+    def daily(self) -> DailyRepository: ...
+
     @property
     def corrections(self) -> CorrectionRepository: ...
 

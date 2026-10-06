@@ -930,3 +930,45 @@ and already_corrected outcomes. The user authorized recording this result, commi
 and starting Slice 1.6. The daily amount/UTC-period/grace decision remains an explicit gate;
 the proposed local rule is 15 coins per UTC calendar day with no streak, catch-up or grace window,
 pending the user's response. Existing live scope and production deferral remain unchanged.
+
+
+### 2026-10-05 — Slice 1.6 daily policy selected under user delegation
+
+The user authorized choosing the reward based on the plans. Adopt the Phase 0 modest baseline:
+15 coins per player per UTC calendar day, resetting at 00:00 UTC. No streak multiplier, grace
+window, missed-day banking or catch-up; missing a day never removes existing progress. This
+resolves the local Slice 1.6 amount/period/grace gate. The 15-coin amount remains subject to the
+Phase 2 integrated faucet/sink simulation gate before public gameplay. Native Linux production
+validation remains deferred and FAIL.
+
+`/daily status` is private and read-only; `/daily claim` credits an existing active player's
+wallet and debits issuance.daily atomically. A permanent (player, UTC day) receipt and unique
+successful interaction prevent duplicate issuance independently of temporary transport retention.
+The Discord interaction's immutable creation day binds request intent; writer-time UTC determines
+eligibility, so an uncommitted request crossing midnight must be retried with a new interaction.
+Successful retries return the recorded result even after midnight or retention cleanup. Frozen
+players/global freeze and runtime mutation disable prevent new claims. No implicit join or wallet
+repair, administrator approval, streak state or background reset job is introduced. Existing
+restricted development scope and the running Slice 1.5 session remain unchanged.
+
+
+### 2026-10-06 — Slice 1.6 provisional local acceptance
+
+Independent review returned `SLICE 1.6: PASS` for candidate source digest
+`3512e2c639f4056f9150b131373f1d45852395220e92fc22b3ea29cd6cc10031`.
+Mandatory verification passed: 948 tests passed, 32 skipped, one known Discord warning;
+Ruff/format/Pyright/diff checks passed. Independent regression passed 262 tests with fresh
+adversarial SQL and clock/history checks. No unresolved local blocker remains. Reports and
+per-file candidate evidence are in `docs/reviews/slice-1-6-*`. The candidate remains uncommitted,
+live daily smoke is pending, and the running Slice 1.5 session was left unchanged. Native Linux
+production validation remains deferred and FAIL. Slice 1.7 has not started.
+
+
+### 2026-10-06 — Accepted checkpoint and transfer-policy handoff
+
+The tester confirmed daily rewards working in restricted disposable development. Fifteen stale
+global commands were removed at their request; the 12 current guild registrations, running bot,
+wallet and scope restrictions were preserved. Earlier pending-live entries describe their dates.
+The user authorized documentation consistency review, committing/pushing the accepted checkpoint,
+and a fresh chat beginning Slice 1.7 policy design. No transfer policy is approved by this handoff.
+Keep the existing server/user/channel restrictions and native production deferral intact.

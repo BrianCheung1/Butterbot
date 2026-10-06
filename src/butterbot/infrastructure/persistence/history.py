@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from butterbot.application.economy.history import HistoryCursor, HistoryEntry
 from butterbot.infrastructure.persistence.models import (
     CorrectionModel,
+    DailyClaimModel,
     GrantExecutionModel,
     GrantTargetModel,
     LedgerPostingModel,
@@ -29,6 +30,7 @@ class SqlAlchemyHistoryRepository:
                 posting.amount,
                 GrantTargetModel.after_amount,
                 CorrectionModel.after_amount,
+                DailyClaimModel.after_amount,
             )
             .join(posting, posting.transaction_id == ledger.id)
             .outerjoin(GrantExecutionModel, GrantExecutionModel.transaction_id == ledger.id)
@@ -46,6 +48,7 @@ class SqlAlchemyHistoryRepository:
                     CorrectionModel.account_id == posting.account_id,
                 ),
             )
+            .outerjoin(DailyClaimModel, DailyClaimModel.transaction_id == ledger.id)
             .where(posting.account_id == account_id)
         )
         if cursor is not None:
@@ -62,14 +65,18 @@ class SqlAlchemyHistoryRepository:
             query.order_by(ledger.committed_at_ms.desc(), ledger.id.desc()).limit(limit)
         )
         # Only fixed public labels; never operator IDs, free-text reasons, or system accounts.
-        labels = {"admin.grant": "Grant", "admin.correction": "Grant correction"}
+        labels = {
+            "admin.grant": "Grant",
+            "admin.correction": "Grant correction",
+            "daily.claim": "Daily reward",
+        }
         return tuple(
             HistoryEntry(
                 row[0],
                 row[1],
                 labels.get(row[2], "Wallet adjustment"),
                 row[3],
-                row[5] if row[5] is not None else row[4],
+                row[6] if row[6] is not None else (row[5] if row[5] is not None else row[4]),
             )
             for row in rows
         )
